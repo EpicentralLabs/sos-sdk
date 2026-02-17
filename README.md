@@ -1,54 +1,50 @@
-# SDK (Frontend-First)
+# @epicentral/sos-sdk
 
-This SDK is organized by feature and wraps the Codama-generated client for the `option_program`.
-It is Kit-native and uses `@solana/kit` types (`Address`, `Instruction`, `Rpc`) across the public API.
-The package entrypoint is `@epicentral/sos-sdk`.
+Solana Option Standard SDK. A frontend-first SDK for native options trading on Solana, built by Epicentral Labs.
+
+Uses `@solana/kit` types (`Address`, `Instruction`, `Rpc`) across the public API.
 
 ## Install
 
 ```bash
-pnpm add @solana/kit decimal.js
+pnpm add @epicentral/sos-sdk @solana/kit decimal.js
 ```
 
-In this repository, the SDK source lives at `epicentral/sos-sdk` and is packaged as
-`@epicentral/sos-sdk`.
+## Overview
 
-## Structure
+- **LONG** — Buy from pool, close to pool, exercise options.
+- **SHORT** — Mint options, unwind, sync, settle, claim premium, close option.
+- **Pool** — Deposit, withdraw, borrow, repay liquidity.
+- **OMLP** — Lender deposit and withdraw.
+- **Accounts** — PDA derivation and account fetchers for options, pools, vaults.
 
-- `client/` shared program constants and address helpers for the option program.
-- `accounts/` PDA derivation and account fetch helpers.
-- `long/` LONG buy/close/exercise/quote builders.
-- `short/` SHORT mint/unwind/sync/settle plus premium/pool/loan builders.
-- `omlp/` lender deposit/withdraw instruction builders.
-- `shared/` common amount, error, and remaining account helpers.
-- `generated/` Codama-generated client (bundled; do not edit).
+Each flow exposes `build*Instruction` for single instruction composition and `build*Transaction` for full-flow `Instruction[]` construction.
 
-## Updating the bundled client
+## Usage
 
-The SDK bundles the program client in `generated/`. From the **option-program** repo root:
+### Build + send (recommended)
 
-1. Regenerate the client: `yarn generate:client`.
-2. Sync into the SDK and copy to the standalone repo: `yarn sync:sdk`.
+```ts
+import {
+  buildBuyFromPoolTransaction,
+  sendBuiltTransaction,
+} from "@epicentral/sos-sdk";
 
-Or run the full pipeline: `yarn generate:client:with-sdk`. The script copies the client into `epicentral/sos-sdk/generated` and then copies the entire SDK to the standalone repo (default `../sos-sdk`) so you can commit from there. Override the standalone path with `STANDALONE_SDK_PATH=/path/to/sos-sdk yarn sync:sdk`.
+const built = await buildBuyFromPoolTransaction(params);
+const signature = await sendBuiltTransaction({
+  rpc,
+  rpcSubscriptions,
+  feePayer: walletSigner,
+  instructions: built.instructions,
+});
+```
 
-## Usage model
-
-Each flow exposes:
-
-- `build*Instruction(params)` for single instruction composition.
-- `build*Transaction(params)` for one-flow `Instruction[]` construction.
-- optional domain services for multi-step flows (no send/confirm).
-
-## Core examples
-
-### Build + send (app-owned)
+### Build + send (manual)
 
 ```ts
 import {
   appendTransactionMessageInstructions,
   createTransactionMessage,
-  getSignatureFromTransaction,
   pipe,
   sendAndConfirmTransactionFactory,
   setTransactionMessageFeePayerSigner,
@@ -71,64 +67,41 @@ const signedTx = await signTransactionMessageWithSigners(txMessage);
 await sendAndConfirmTransactionFactory({ rpc, rpcSubscriptions })(signedTx, {
   commitment: "confirmed",
 });
-
-const signature = getSignatureFromTransaction(signedTx);
 ```
 
-### Build + send (SDK helper)
-
-```ts
-import {
-  buildBuyFromPoolTransaction,
-  sendBuiltTransaction,
-} from "@epicentral/sos-sdk";
-
-const built = await buildBuyFromPoolTransaction(params);
-const signature = await sendBuiltTransaction({
-  rpc,
-  rpcSubscriptions,
-  feePayer: walletSigner,
-  instructions: built.instructions,
-});
-```
-
-### Open LONG / close LONG
+### LONG
 
 ```ts
 import {
   buildBuyFromPoolTransaction,
   buildCloseLongToPoolTransaction,
+  buildOptionExerciseTransaction,
 } from "@epicentral/sos-sdk";
 
+// Open LONG
 const openLong = await buildBuyFromPoolTransaction(openLongParams);
+
+// Close LONG
 const closeLong = await buildCloseLongToPoolTransaction(closeLongParams);
+
+// Exercise LONG
+const exercise = buildOptionExerciseTransaction({ optionAccount, positionAccount, /* ... */ });
 ```
 
-### Exercise LONG
+### SHORT
 
 ```ts
-import { buildOptionExerciseTransaction } from "@epicentral/sos-sdk";
+import {
+  buildOptionMintTransaction,
+  buildUnwindWriterUnsoldTransaction,
+  buildSyncWriterPositionTransaction,
+  buildSettleMakerCollateralTransaction,
+  buildClaimPremiumTransaction,
+  buildCloseOptionTransaction,
+} from "@epicentral/sos-sdk";
+import { OptionType } from "@epicentral/sos-sdk";
 
-const exercise = buildOptionExerciseTransaction({
-  optionAccount,
-  positionAccount,
-  marketData,
-  underlyingMint,
-  priceUpdate,
-  buyerPaymentAccount,
-  makerCollateralAccount,
-  escrowState,
-  escrowTokenAccount,
-  escrowAuthority,
-  buyer,
-});
-```
-
-### Open SHORT (option mint)
-
-```ts
-import { buildOptionMintTransaction, OptionType } from "@epicentral/sos-sdk";
-
+// Mint (open SHORT)
 const built = await buildOptionMintTransaction({
   optionType: OptionType.Call,
   strikePrice,
@@ -142,53 +115,25 @@ const built = await buildOptionMintTransaction({
   makerCollateralAccount,
   underlyingMint,
 });
-```
 
-### Unwind / Sync / Settle SHORT
-
-```ts
-import {
-  buildSettleMakerCollateralTransaction,
-  buildSyncWriterPositionTransaction,
-  buildUnwindWriterUnsoldTransaction,
-} from "@epicentral/sos-sdk";
-
+// Unwind / Sync / Settle
 const unwind = await buildUnwindWriterUnsoldTransaction(unwindParams);
 const sync = buildSyncWriterPositionTransaction(syncParams);
 const settle = await buildSettleMakerCollateralTransaction(settleParams);
+
+// Claim premium / close option
+const claim = await buildClaimPremiumTransaction({ optionPool, makerPaymentAccount, premiumVault, maker });
+const close = buildCloseOptionTransaction({ optionAccount, optionMint, makerOptionAccount, maker });
 ```
 
-### Claim premium / close option
+### Pool
 
 ```ts
 import {
-  buildClaimPremiumTransaction,
-  buildCloseOptionTransaction,
-} from "@epicentral/sos-sdk";
-
-const claim = await buildClaimPremiumTransaction({
-  optionPool,
-  makerPaymentAccount,
-  premiumVault,
-  maker,
-});
-
-const close = buildCloseOptionTransaction({
-  optionAccount,
-  optionMint,
-  makerOptionAccount,
-  maker,
-});
-```
-
-### Pool liquidity / borrow / repay
-
-```ts
-import {
-  buildBorrowFromPoolTransaction,
   buildDepositToPoolTransaction,
-  buildRepayPoolLoanTransaction,
   buildWithdrawFromPoolTransaction,
+  buildBorrowFromPoolTransaction,
+  buildRepayPoolLoanTransaction,
 } from "@epicentral/sos-sdk";
 
 const deposit = await buildDepositToPoolTransaction(depositToPoolParams);
@@ -197,12 +142,7 @@ const borrow = await buildBorrowFromPoolTransaction(borrowFromPoolParams);
 const repay = await buildRepayPoolLoanTransaction(repayPoolLoanParams);
 ```
 
-Repayment source behavior:
-
-- `buildRepayPoolLoanTransaction`: principal is repaid from `escrowTokenAccount`; accrued interest + protocol fees are repaid from `makerTokenAccount`.
-- `buildRepayPoolLoanFromCollateralTransaction`: full repayment is sourced from `collateralVault`.
-
-### OMLP deposit/withdraw
+### OMLP
 
 ```ts
 import {
@@ -210,16 +150,23 @@ import {
   buildWithdrawFromPositionTransaction,
 } from "@epicentral/sos-sdk";
 
-const deposit = await buildDepositToPositionTransaction(
-  { vault, lenderTokenAccount, vaultTokenAccount, lender, amount }
-);
-
-const withdraw = await buildWithdrawFromPositionTransaction(
-  { vault, vaultTokenAccount, lenderTokenAccount, lender, amount }
-);
+const deposit = await buildDepositToPositionTransaction({
+  vault,
+  lenderTokenAccount,
+  vaultTokenAccount,
+  lender,
+  amount,
+});
+const withdraw = await buildWithdrawFromPositionTransaction({
+  vault,
+  vaultTokenAccount,
+  lenderTokenAccount,
+  lender,
+  amount,
+});
 ```
 
-### Replace Anchor reads with SDK fetchers
+### Fetch accounts
 
 ```ts
 import { fetchOptionAccount, fetchOptionPool, fetchVault } from "@epicentral/sos-sdk";
@@ -228,12 +175,3 @@ const option = await fetchOptionAccount(rpc, optionAddress);
 const pool = await fetchOptionPool(rpc, optionPoolAddress);
 const vault = await fetchVault(rpc, vaultAddress);
 ```
-
-## Migration notes
-
-- This SDK is the only frontend integration surface for this repository.
-- Legacy `frontend/constants`, `frontend/services`, and `frontend/utils` modules were removed.
-- Replace Anchor `program.account.*` reads with SDK fetchers.
-- Replace Anchor `program.methods.*` writes with SDK builders.
-- App code should own message building, signing, send, and confirmation via `@solana/kit`.
-- `long/service.ts` and `short/service.ts` were removed in favor of direct builder calls.
