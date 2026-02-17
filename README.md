@@ -21,6 +21,16 @@ In this repository, the SDK source lives at `epicentral/sos-sdk` and is packaged
 - `short/` SHORT mint/unwind/sync/settle plus premium/pool/loan builders.
 - `omlp/` lender deposit/withdraw instruction builders.
 - `shared/` common amount, error, and remaining account helpers.
+- `generated/` Codama-generated client (bundled; do not edit).
+
+## Updating the bundled client
+
+The SDK bundles the program client in `generated/`. From the **option-program** repo root:
+
+1. Regenerate the client: `yarn generate:client`.
+2. Sync into the SDK and copy to the standalone repo: `yarn sync:sdk`.
+
+Or run the full pipeline: `yarn generate:client:with-sdk`. The script copies the client into `epicentral/sos-sdk/generated` and then copies the entire SDK to the standalone repo (default `../sos-sdk`) so you can commit from there. Override the standalone path with `STANDALONE_SDK_PATH=/path/to/sos-sdk yarn sync:sdk`.
 
 ## Usage model
 

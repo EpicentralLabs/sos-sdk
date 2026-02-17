@@ -19,7 +19,7 @@ import {
   type PositionAccount,
   type Vault,
   type WriterPosition,
-} from "../../../clients/ts/src/generated/accounts";
+} from "../generated/accounts";
 import type { Address } from "@solana/kit";
 import { toAddress } from "../client/program";
 import type { AddressLike, KitRpc } from "../client/types";

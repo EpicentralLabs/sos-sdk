@@ -4,7 +4,7 @@ import {
   getRepayPoolLoanInstructionAsync,
   getRepayPoolLoanFromCollateralInstructionAsync,
   getWithdrawFromPoolInstructionAsync,
-} from "../../../clients/ts/src/generated/instructions";
+} from "../generated/instructions";
 import type { Instruction } from "@solana/kit";
 import { toAddress } from "../client/program";
 import type { AddressLike, BuiltTransaction } from "../client/types";

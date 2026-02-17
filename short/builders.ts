@@ -4,7 +4,7 @@ import {
   getSyncWriterPositionInstruction,
   getUnwindWriterUnsoldInstructionAsync,
   type OptionType,
-} from "../../../clients/ts/src/generated";
+} from "../generated";
 import type { Instruction } from "@solana/kit";
 import { toAddress } from "../client/program";
 import type { AddressLike, BuiltTransaction } from "../client/types";

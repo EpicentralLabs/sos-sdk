@@ -1,5 +1,5 @@
 import { address, type Address } from "@solana/kit";
-import { OPTION_PROGRAM_PROGRAM_ADDRESS } from "../../../clients/ts/src/generated/programs";
+import { OPTION_PROGRAM_PROGRAM_ADDRESS } from "../generated/programs";
 import type { AddressLike } from "./types";
 
 export const PROGRAM_ADDRESS = OPTION_PROGRAM_PROGRAM_ADDRESS;

@@ -1,7 +1,7 @@
 export * from "./client/program";
 export * from "./client/types";
 export * from "./client/lookup-table";
-export { OptionType } from "../../clients/ts/src/generated/types";
+export { OptionType } from "./generated/types";
 
 export * from "./accounts/pdas";
 export * from "./accounts/fetchers";

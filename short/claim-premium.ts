@@ -1,4 +1,4 @@
-import { getClaimPremiumInstructionAsync } from "../../../clients/ts/src/generated/instructions";
+import { getClaimPremiumInstructionAsync } from "../generated/instructions";
 import type { Instruction } from "@solana/kit";
 import { toAddress } from "../client/program";
 import type { AddressLike, BuiltTransaction } from "../client/types";

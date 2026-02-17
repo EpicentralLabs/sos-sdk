@@ -1,5 +1,5 @@
 import { address, getAddressEncoder, getProgramDerivedAddress, type Address } from "@solana/kit";
-import { OptionType } from "../../../clients/ts/src/generated/types";
+import { OptionType } from "../generated/types";
 import { PROGRAM_ID, toAddress } from "../client/program";
 import type { AddressLike } from "../client/types";
 
