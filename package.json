@@ -1,8 +1,8 @@
 {
   "name": "@epicentral/sos-sdk",
   "version": "0.1.0",
-  "private": true,
-  "description": "Solana Option Standard SDK. The frontend-first SDK for Native Options Trading on Solana.",
+  "private": false,
+  "description": "Solana Option Standard SDK. The frontend-first SDK for Native Options Trading on Solana. Created by Epicentral Labs.",
   "type": "module",
   "sideEffects": false,
   "main": "./index.ts",
