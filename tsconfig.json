@@ -5,7 +5,8 @@
     "moduleResolution": "node",
     "strict": true,
     "declaration": true,
-    "outDir": "dist"
+    "outDir": "dist",
+    "skipLibCheck": true
   },
   "include": ["**/*.ts"],
   "exclude": ["dist", "node_modules"]

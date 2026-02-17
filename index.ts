@@ -6,6 +6,7 @@ export { OptionType } from "./generated/types";
 export * from "./accounts/pdas";
 export * from "./accounts/fetchers";
 export * from "./accounts/list";
+export * from "./accounts/resolve-option";
 
 export * from "./shared/amounts";
 export * from "./shared/errors";

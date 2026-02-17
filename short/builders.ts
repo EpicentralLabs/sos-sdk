@@ -7,8 +7,14 @@ import {
 } from "../generated";
 import type { Instruction } from "@solana/kit";
 import { toAddress } from "../client/program";
-import type { AddressLike, BuiltTransaction } from "../client/types";
-import { deriveMakerCollateralSharePda, deriveMetadataPda } from "../accounts/pdas";
+import type { AddressLike, BuiltTransaction, KitRpc } from "../client/types";
+import { resolveOptionAccounts } from "../accounts/resolve-option";
+import {
+  deriveAssociatedTokenAddress,
+  deriveMakerCollateralSharePda,
+  deriveMetadataPda,
+  deriveWriterPositionPda,
+} from "../accounts/pdas";
 import { assertNonNegativeAmount, assertPositiveAmount } from "../shared/amounts";
 import { invariant } from "../shared/errors";
 import {
@@ -184,6 +190,99 @@ export async function buildOptionMintTransaction(
   return { instructions: [instruction] };
 }
 
+export interface BuildOptionMintTransactionWithDerivationParams {
+  underlyingAsset: AddressLike;
+  optionType: OptionType;
+  strikePrice: number;
+  expirationDate: bigint | number;
+  quantity: bigint | number;
+  underlyingMint: AddressLike;
+  underlyingSymbol: string;
+  makerCollateralAmount: bigint | number;
+  borrowedAmount: bigint | number;
+  maker: AddressLike;
+  makerCollateralAccount: AddressLike;
+  rpc: KitRpc;
+  programId?: AddressLike;
+  vault?: AddressLike;
+  vaultTokenAccount?: AddressLike;
+  escrowState?: AddressLike;
+  escrowAuthority?: AddressLike;
+  escrowTokenAccount?: AddressLike;
+  poolLoan?: AddressLike;
+  liquidityRouter?: AddressLike;
+  remainingAccounts?: RemainingAccountInput[];
+}
+
+export async function buildOptionMintTransactionWithDerivation(
+  params: BuildOptionMintTransactionWithDerivationParams
+): Promise<BuiltTransaction> {
+  const borrowedAmount = BigInt(params.borrowedAmount);
+  if (borrowedAmount > 0n) {
+    invariant(!!params.vault, "vault is required when borrowedAmount > 0");
+    invariant(
+      !!params.vaultTokenAccount,
+      "vaultTokenAccount is required when borrowedAmount > 0"
+    );
+    invariant(!!params.escrowState, "escrowState is required when borrowedAmount > 0");
+    invariant(
+      !!params.escrowAuthority,
+      "escrowAuthority is required when borrowedAmount > 0"
+    );
+    invariant(
+      !!params.escrowTokenAccount,
+      "escrowTokenAccount is required when borrowedAmount > 0"
+    );
+    invariant(!!params.poolLoan, "poolLoan is required when borrowedAmount > 0");
+  }
+
+  const resolved = await resolveOptionAccounts({
+    underlyingAsset: params.underlyingAsset,
+    optionType: params.optionType,
+    strikePrice: params.strikePrice,
+    expirationDate: params.expirationDate,
+    programId: params.programId,
+    rpc: params.rpc,
+  });
+
+  invariant(
+    !!resolved.escrowLongAccount && !!resolved.premiumVault && !!resolved.collateralVault,
+    "Option pool and collateral pool must exist; ensure rpc is provided and pools are initialized."
+  );
+
+  const underlyingMint = resolved.underlyingMint ?? params.underlyingMint;
+  const [makerLongAccount, makerShortAccount] = await Promise.all([
+    deriveAssociatedTokenAddress(params.maker, resolved.longMint),
+    deriveAssociatedTokenAddress(params.maker, resolved.shortMint),
+  ]);
+
+  return buildOptionMintTransaction({
+    ...params,
+    underlyingAsset: params.underlyingAsset,
+    underlyingMint,
+    optionAccount: resolved.optionAccount,
+    longMint: resolved.longMint,
+    shortMint: resolved.shortMint,
+    mintAuthority: resolved.mintAuthority,
+    makerLongAccount,
+    makerShortAccount,
+    marketData: resolved.marketData,
+    optionPool: resolved.optionPool,
+    escrowLongAccount: resolved.escrowLongAccount,
+    premiumVault: resolved.premiumVault,
+    collateralPool: resolved.collateralPool,
+    collateralVault: resolved.collateralVault,
+    vault: params.vault,
+    vaultTokenAccount: params.vaultTokenAccount,
+    escrowState: params.escrowState,
+    escrowAuthority: params.escrowAuthority,
+    escrowTokenAccount: params.escrowTokenAccount,
+    poolLoan: params.poolLoan,
+    liquidityRouter: params.liquidityRouter,
+    remainingAccounts: params.remainingAccounts,
+  });
+}
+
 export async function buildUnwindWriterUnsoldInstruction(
   params: BuildUnwindWriterUnsoldParams
 ): Promise<Instruction<string>> {
@@ -214,6 +313,63 @@ export async function buildUnwindWriterUnsoldTransaction(
 ): Promise<BuiltTransaction> {
   const instruction = await buildUnwindWriterUnsoldInstruction(params);
   return { instructions: [instruction] };
+}
+
+export interface BuildUnwindWriterUnsoldTransactionWithDerivationParams {
+  underlyingAsset: AddressLike;
+  optionType: OptionType;
+  strikePrice: number;
+  expirationDate: bigint | number;
+  writer: AddressLike;
+  unwindQty: bigint | number;
+  rpc: KitRpc;
+  programId?: AddressLike;
+  omlpVault?: AddressLike;
+  feeWallet?: AddressLike;
+  remainingAccounts?: RemainingAccountInput[];
+}
+
+export async function buildUnwindWriterUnsoldTransactionWithDerivation(
+  params: BuildUnwindWriterUnsoldTransactionWithDerivationParams
+): Promise<BuiltTransaction> {
+  const resolved = await resolveOptionAccounts({
+    underlyingAsset: params.underlyingAsset,
+    optionType: params.optionType,
+    strikePrice: params.strikePrice,
+    expirationDate: params.expirationDate,
+    programId: params.programId,
+    rpc: params.rpc,
+  });
+
+  invariant(
+    !!resolved.escrowLongAccount && !!resolved.collateralVault && !!resolved.underlyingMint,
+    "Option pool and collateral pool must exist; ensure rpc is provided and pools are initialized."
+  );
+
+  const [writerShortAccount, writerCollateralAccount, writerPosition] =
+    await Promise.all([
+      deriveAssociatedTokenAddress(params.writer, resolved.shortMint),
+      deriveAssociatedTokenAddress(params.writer, resolved.underlyingMint),
+      deriveWriterPositionPda(resolved.optionPool, params.writer, params.programId),
+    ]);
+
+  return buildUnwindWriterUnsoldTransaction({
+    optionPool: resolved.optionPool,
+    optionAccount: resolved.optionAccount,
+    longMint: resolved.longMint,
+    shortMint: resolved.shortMint,
+    escrowLongAccount: resolved.escrowLongAccount!,
+    writerShortAccount,
+    collateralVault: resolved.collateralVault!,
+    writerCollateralAccount,
+    writer: params.writer,
+    unwindQty: params.unwindQty,
+    collateralPool: resolved.collateralPool,
+    writerPosition: writerPosition[0],
+    omlpVault: params.omlpVault,
+    feeWallet: params.feeWallet,
+    remainingAccounts: params.remainingAccounts,
+  });
 }
 
 export function buildSyncWriterPositionInstruction(
