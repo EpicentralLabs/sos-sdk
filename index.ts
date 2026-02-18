@@ -9,6 +9,7 @@ export * from "./accounts/list";
 export * from "./accounts/resolve-option";
 
 export * from "./shared/amounts";
+export * from "./shared/balances";
 export * from "./shared/errors";
 export * from "./shared/remaining-accounts";
 export * from "./shared/transactions";

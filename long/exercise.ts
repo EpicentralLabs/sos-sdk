@@ -18,6 +18,10 @@ export interface BuildOptionExerciseParams {
   tokenProgram?: AddressLike;
 }
 
+/**
+ * Legacy escrow-based option exercise. Prefer pool flows: close_long_to_pool and auto_exercise_expired.
+ * @deprecated Use buildCloseLongToPoolTransaction for closing longs and rely on auto_exercise_expired for expiration.
+ */
 export function buildOptionExerciseInstruction(
   params: BuildOptionExerciseParams
 ): Instruction<string> {
@@ -38,8 +42,9 @@ export function buildOptionExerciseInstruction(
 }
 
 /**
- * Builds an option exercise transaction instruction set.
- * Use `priceUpdate` from a fresh Pyth receiver update for accurate exercise pricing.
+ * Builds an option exercise transaction (escrow/ask-based flow).
+ * Prefer pool-based flows: buildCloseLongToPoolTransaction for closing longs and auto_exercise_expired for expired ITM.
+ * @deprecated Use buildCloseLongToPoolTransaction and auto_exercise_expired; do not use for new flows.
  */
 export function buildOptionExerciseTransaction(
   params: BuildOptionExerciseParams

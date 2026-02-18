@@ -129,3 +129,41 @@ export async function fetchManyAccounts(
     exists: infos[index] !== null,
   }));
 }
+
+const optionDecoder = getOptionAccountDecoder();
+
+/**
+ * Batch-fetches option accounts via getMultipleAccounts (one RPC round-trip).
+ * Returns a Map from address to OptionAccount or null if missing/invalid.
+ */
+export async function fetchOptionAccounts(
+  rpc: KitRpc,
+  addresses: AddressLike[]
+): Promise<Map<Address, OptionAccount | null>> {
+  if (addresses.length === 0) return new Map();
+  const keys = addresses.map((value) => toAddress(value));
+  const response = await rpc.getMultipleAccounts(keys, { encoding: "base64" }).send();
+  const infos = response.value;
+  const result = new Map<Address, OptionAccount | null>();
+  for (let i = 0; i < keys.length; i++) {
+    const accountInfo = infos[i];
+    if (!accountInfo) {
+      result.set(keys[i], null);
+      continue;
+    }
+    const [b64] = accountInfo.data;
+    if (!b64) {
+      result.set(keys[i], null);
+      continue;
+    }
+    const binary = atob(b64);
+    const data = new Uint8Array(binary.length);
+    for (let j = 0; j < binary.length; j++) data[j] = binary.charCodeAt(j);
+    try {
+      result.set(keys[i], optionDecoder.decode(data));
+    } catch {
+      result.set(keys[i], null);
+    }
+  }
+  return result;
+}
