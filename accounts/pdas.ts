@@ -159,22 +159,6 @@ export async function deriveMakerCollateralSharePda(
   });
 }
 
-export async function deriveMakerPoolSharePda(
-  optionPool: AddressLike,
-  maker: AddressLike,
-  programId: AddressLike = PROGRAM_ID
-): Promise<readonly [Address, number]> {
-  const addressEncoder = getAddressEncoder();
-  return getProgramDerivedAddress({
-    programAddress: toAddress(programId),
-    seeds: [
-      new TextEncoder().encode("maker_pool_share"),
-      addressEncoder.encode(toAddress(optionPool)),
-      addressEncoder.encode(toAddress(maker)),
-    ],
-  });
-}
-
 export async function deriveBuyerPositionPda(
   buyer: AddressLike,
   optionAccount: AddressLike,

@@ -7,25 +7,62 @@
  */
 
 import {
+  assertIsInstructionWithAccounts,
   containsBytes,
   fixEncoderSize,
   getBytesEncoder,
   type Address,
+  type Instruction,
+  type InstructionWithData,
   type ReadonlyUint8Array,
 } from "@solana/kit";
 import {
+  parseAcceptAdminInstruction,
+  parseAutoExerciseAllExpiredInstruction,
+  parseAutoExerciseExpiredInstruction,
+  parseBorrowFromPoolInstruction,
+  parseBuyFromPoolInstruction,
+  parseClaimThetaInstruction,
+  parseCloseLongToPoolInstruction,
+  parseCloseOptionInstruction,
+  parseCreateEscrowV2Instruction,
+  parseCreateLiquidityRouterInstruction,
+  parseDepositCollateralInstruction,
+  parseDepositToPositionInstruction,
+  parseInitCollateralPoolInstruction,
+  parseInitConfigInstruction,
+  parseInitializeMarketDataInstruction,
+  parseInitOptionPoolInstruction,
+  parseLiquidateWriterPositionInstruction,
+  parseOmlpCreateVaultInstruction,
+  parseOmlpTakeOfferWithFailoverInstruction,
+  parseOmlpUpdateMaxLeverageInstruction,
+  parseOmlpUpdateProtocolFeeInstruction,
+  parseOmlpUpdateSupplyLimitInstruction,
+  parseOptionExerciseInstruction,
+  parseOptionMintInstruction,
+  parseOptionValidateInstruction,
+  parseRepayPoolLoanFromCollateralInstruction,
+  parseRepayPoolLoanInstruction,
+  parseSettleMakerCollateralInstruction,
+  parseSyncWriterPositionInstruction,
+  parseTransferAdminInstruction,
+  parseUnwindWriterUnsoldInstruction,
+  parseUpdateImpliedVolatilityInstruction,
+  parseUpdateMarketDataInstruction,
+  parseWithdrawFromPositionInstruction,
+  parseWriteToPoolInstruction,
   type ParsedAcceptAdminInstruction,
   type ParsedAutoExerciseAllExpiredInstruction,
   type ParsedAutoExerciseExpiredInstruction,
   type ParsedBorrowFromPoolInstruction,
   type ParsedBuyFromPoolInstruction,
-  type ParsedClaimPremiumInstruction,
+  type ParsedClaimThetaInstruction,
   type ParsedCloseLongToPoolInstruction,
   type ParsedCloseOptionInstruction,
   type ParsedCreateEscrowV2Instruction,
   type ParsedCreateLiquidityRouterInstruction,
   type ParsedDepositCollateralInstruction,
-  type ParsedDepositToPoolInstruction,
   type ParsedDepositToPositionInstruction,
   type ParsedInitCollateralPoolInstruction,
   type ParsedInitConfigInstruction,
@@ -48,7 +85,6 @@ import {
   type ParsedUnwindWriterUnsoldInstruction,
   type ParsedUpdateImpliedVolatilityInstruction,
   type ParsedUpdateMarketDataInstruction,
-  type ParsedWithdrawFromPoolInstruction,
   type ParsedWithdrawFromPositionInstruction,
   type ParsedWriteToPoolInstruction,
 } from "../instructions";
@@ -64,7 +100,6 @@ export enum OptionProgramAccount {
   LenderPosition,
   LiquidityRouter,
   MakerCollateralShare,
-  MakerPoolShare,
   MarketDataAccount,
   OptionAccount,
   OptionPool,
@@ -155,17 +190,6 @@ export function identifyOptionProgramAccount(
     )
   ) {
     return OptionProgramAccount.MakerCollateralShare;
-  }
-  if (
-    containsBytes(
-      data,
-      fixEncoderSize(getBytesEncoder(), 8).encode(
-        new Uint8Array([171, 211, 240, 11, 182, 141, 59, 217]),
-      ),
-      0,
-    )
-  ) {
-    return OptionProgramAccount.MakerPoolShare;
   }
   if (
     containsBytes(
@@ -266,13 +290,12 @@ export enum OptionProgramInstruction {
   AutoExerciseExpired,
   BorrowFromPool,
   BuyFromPool,
-  ClaimPremium,
+  ClaimTheta,
   CloseLongToPool,
   CloseOption,
   CreateEscrowV2,
   CreateLiquidityRouter,
   DepositCollateral,
-  DepositToPool,
   DepositToPosition,
   InitCollateralPool,
   InitConfig,
@@ -295,7 +318,6 @@ export enum OptionProgramInstruction {
   UnwindWriterUnsold,
   UpdateImpliedVolatility,
   UpdateMarketData,
-  WithdrawFromPool,
   WithdrawFromPosition,
   WriteToPool,
 }
@@ -363,12 +385,12 @@ export function identifyOptionProgramInstruction(
     containsBytes(
       data,
       fixEncoderSize(getBytesEncoder(), 8).encode(
-        new Uint8Array([225, 124, 12, 107, 24, 154, 37, 100]),
+        new Uint8Array([151, 147, 69, 241, 135, 166, 23, 62]),
       ),
       0,
     )
   ) {
-    return OptionProgramInstruction.ClaimPremium;
+    return OptionProgramInstruction.ClaimTheta;
   }
   if (
     containsBytes(
@@ -424,17 +446,6 @@ export function identifyOptionProgramInstruction(
     )
   ) {
     return OptionProgramInstruction.DepositCollateral;
-  }
-  if (
-    containsBytes(
-      data,
-      fixEncoderSize(getBytesEncoder(), 8).encode(
-        new Uint8Array([99, 136, 15, 66, 85, 146, 24, 89]),
-      ),
-      0,
-    )
-  ) {
-    return OptionProgramInstruction.DepositToPool;
   }
   if (
     containsBytes(
@@ -682,17 +693,6 @@ export function identifyOptionProgramInstruction(
     containsBytes(
       data,
       fixEncoderSize(getBytesEncoder(), 8).encode(
-        new Uint8Array([62, 33, 128, 81, 40, 234, 29, 77]),
-      ),
-      0,
-    )
-  ) {
-    return OptionProgramInstruction.WithdrawFromPool;
-  }
-  if (
-    containsBytes(
-      data,
-      fixEncoderSize(getBytesEncoder(), 8).encode(
         new Uint8Array([39, 178, 255, 108, 24, 150, 180, 238]),
       ),
       0,
@@ -735,8 +735,8 @@ export type ParsedOptionProgramInstruction<
       instructionType: OptionProgramInstruction.BuyFromPool;
     } & ParsedBuyFromPoolInstruction<TProgram>)
   | ({
-      instructionType: OptionProgramInstruction.ClaimPremium;
-    } & ParsedClaimPremiumInstruction<TProgram>)
+      instructionType: OptionProgramInstruction.ClaimTheta;
+    } & ParsedClaimThetaInstruction<TProgram>)
   | ({
       instructionType: OptionProgramInstruction.CloseLongToPool;
     } & ParsedCloseLongToPoolInstruction<TProgram>)
@@ -752,9 +752,6 @@ export type ParsedOptionProgramInstruction<
   | ({
       instructionType: OptionProgramInstruction.DepositCollateral;
     } & ParsedDepositCollateralInstruction<TProgram>)
-  | ({
-      instructionType: OptionProgramInstruction.DepositToPool;
-    } & ParsedDepositToPoolInstruction<TProgram>)
   | ({
       instructionType: OptionProgramInstruction.DepositToPosition;
     } & ParsedDepositToPositionInstruction<TProgram>)
@@ -822,11 +819,265 @@ export type ParsedOptionProgramInstruction<
       instructionType: OptionProgramInstruction.UpdateMarketData;
     } & ParsedUpdateMarketDataInstruction<TProgram>)
   | ({
-      instructionType: OptionProgramInstruction.WithdrawFromPool;
-    } & ParsedWithdrawFromPoolInstruction<TProgram>)
-  | ({
       instructionType: OptionProgramInstruction.WithdrawFromPosition;
     } & ParsedWithdrawFromPositionInstruction<TProgram>)
   | ({
       instructionType: OptionProgramInstruction.WriteToPool;
     } & ParsedWriteToPoolInstruction<TProgram>);
+
+export function parseOptionProgramInstruction<TProgram extends string>(
+  instruction: Instruction<TProgram> & InstructionWithData<ReadonlyUint8Array>,
+): ParsedOptionProgramInstruction<TProgram> {
+  const instructionType = identifyOptionProgramInstruction(instruction);
+  switch (instructionType) {
+    case OptionProgramInstruction.AcceptAdmin: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: OptionProgramInstruction.AcceptAdmin,
+        ...parseAcceptAdminInstruction(instruction),
+      };
+    }
+    case OptionProgramInstruction.AutoExerciseAllExpired: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: OptionProgramInstruction.AutoExerciseAllExpired,
+        ...parseAutoExerciseAllExpiredInstruction(instruction),
+      };
+    }
+    case OptionProgramInstruction.AutoExerciseExpired: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: OptionProgramInstruction.AutoExerciseExpired,
+        ...parseAutoExerciseExpiredInstruction(instruction),
+      };
+    }
+    case OptionProgramInstruction.BorrowFromPool: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: OptionProgramInstruction.BorrowFromPool,
+        ...parseBorrowFromPoolInstruction(instruction),
+      };
+    }
+    case OptionProgramInstruction.BuyFromPool: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: OptionProgramInstruction.BuyFromPool,
+        ...parseBuyFromPoolInstruction(instruction),
+      };
+    }
+    case OptionProgramInstruction.ClaimTheta: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: OptionProgramInstruction.ClaimTheta,
+        ...parseClaimThetaInstruction(instruction),
+      };
+    }
+    case OptionProgramInstruction.CloseLongToPool: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: OptionProgramInstruction.CloseLongToPool,
+        ...parseCloseLongToPoolInstruction(instruction),
+      };
+    }
+    case OptionProgramInstruction.CloseOption: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: OptionProgramInstruction.CloseOption,
+        ...parseCloseOptionInstruction(instruction),
+      };
+    }
+    case OptionProgramInstruction.CreateEscrowV2: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: OptionProgramInstruction.CreateEscrowV2,
+        ...parseCreateEscrowV2Instruction(instruction),
+      };
+    }
+    case OptionProgramInstruction.CreateLiquidityRouter: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: OptionProgramInstruction.CreateLiquidityRouter,
+        ...parseCreateLiquidityRouterInstruction(instruction),
+      };
+    }
+    case OptionProgramInstruction.DepositCollateral: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: OptionProgramInstruction.DepositCollateral,
+        ...parseDepositCollateralInstruction(instruction),
+      };
+    }
+    case OptionProgramInstruction.DepositToPosition: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: OptionProgramInstruction.DepositToPosition,
+        ...parseDepositToPositionInstruction(instruction),
+      };
+    }
+    case OptionProgramInstruction.InitCollateralPool: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: OptionProgramInstruction.InitCollateralPool,
+        ...parseInitCollateralPoolInstruction(instruction),
+      };
+    }
+    case OptionProgramInstruction.InitConfig: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: OptionProgramInstruction.InitConfig,
+        ...parseInitConfigInstruction(instruction),
+      };
+    }
+    case OptionProgramInstruction.InitOptionPool: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: OptionProgramInstruction.InitOptionPool,
+        ...parseInitOptionPoolInstruction(instruction),
+      };
+    }
+    case OptionProgramInstruction.InitializeMarketData: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: OptionProgramInstruction.InitializeMarketData,
+        ...parseInitializeMarketDataInstruction(instruction),
+      };
+    }
+    case OptionProgramInstruction.LiquidateWriterPosition: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: OptionProgramInstruction.LiquidateWriterPosition,
+        ...parseLiquidateWriterPositionInstruction(instruction),
+      };
+    }
+    case OptionProgramInstruction.OmlpCreateVault: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: OptionProgramInstruction.OmlpCreateVault,
+        ...parseOmlpCreateVaultInstruction(instruction),
+      };
+    }
+    case OptionProgramInstruction.OmlpTakeOfferWithFailover: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: OptionProgramInstruction.OmlpTakeOfferWithFailover,
+        ...parseOmlpTakeOfferWithFailoverInstruction(instruction),
+      };
+    }
+    case OptionProgramInstruction.OmlpUpdateMaxLeverage: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: OptionProgramInstruction.OmlpUpdateMaxLeverage,
+        ...parseOmlpUpdateMaxLeverageInstruction(instruction),
+      };
+    }
+    case OptionProgramInstruction.OmlpUpdateProtocolFee: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: OptionProgramInstruction.OmlpUpdateProtocolFee,
+        ...parseOmlpUpdateProtocolFeeInstruction(instruction),
+      };
+    }
+    case OptionProgramInstruction.OmlpUpdateSupplyLimit: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: OptionProgramInstruction.OmlpUpdateSupplyLimit,
+        ...parseOmlpUpdateSupplyLimitInstruction(instruction),
+      };
+    }
+    case OptionProgramInstruction.OptionExercise: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: OptionProgramInstruction.OptionExercise,
+        ...parseOptionExerciseInstruction(instruction),
+      };
+    }
+    case OptionProgramInstruction.OptionMint: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: OptionProgramInstruction.OptionMint,
+        ...parseOptionMintInstruction(instruction),
+      };
+    }
+    case OptionProgramInstruction.OptionValidate: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: OptionProgramInstruction.OptionValidate,
+        ...parseOptionValidateInstruction(instruction),
+      };
+    }
+    case OptionProgramInstruction.RepayPoolLoan: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: OptionProgramInstruction.RepayPoolLoan,
+        ...parseRepayPoolLoanInstruction(instruction),
+      };
+    }
+    case OptionProgramInstruction.RepayPoolLoanFromCollateral: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: OptionProgramInstruction.RepayPoolLoanFromCollateral,
+        ...parseRepayPoolLoanFromCollateralInstruction(instruction),
+      };
+    }
+    case OptionProgramInstruction.SettleMakerCollateral: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: OptionProgramInstruction.SettleMakerCollateral,
+        ...parseSettleMakerCollateralInstruction(instruction),
+      };
+    }
+    case OptionProgramInstruction.SyncWriterPosition: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: OptionProgramInstruction.SyncWriterPosition,
+        ...parseSyncWriterPositionInstruction(instruction),
+      };
+    }
+    case OptionProgramInstruction.TransferAdmin: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: OptionProgramInstruction.TransferAdmin,
+        ...parseTransferAdminInstruction(instruction),
+      };
+    }
+    case OptionProgramInstruction.UnwindWriterUnsold: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: OptionProgramInstruction.UnwindWriterUnsold,
+        ...parseUnwindWriterUnsoldInstruction(instruction),
+      };
+    }
+    case OptionProgramInstruction.UpdateImpliedVolatility: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: OptionProgramInstruction.UpdateImpliedVolatility,
+        ...parseUpdateImpliedVolatilityInstruction(instruction),
+      };
+    }
+    case OptionProgramInstruction.UpdateMarketData: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: OptionProgramInstruction.UpdateMarketData,
+        ...parseUpdateMarketDataInstruction(instruction),
+      };
+    }
+    case OptionProgramInstruction.WithdrawFromPosition: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: OptionProgramInstruction.WithdrawFromPosition,
+        ...parseWithdrawFromPositionInstruction(instruction),
+      };
+    }
+    case OptionProgramInstruction.WriteToPool: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: OptionProgramInstruction.WriteToPool,
+        ...parseWriteToPoolInstruction(instruction),
+      };
+    }
+    default:
+      throw new Error(
+        `Unrecognized instruction type: ${instructionType as string}`,
+      );
+  }
+}

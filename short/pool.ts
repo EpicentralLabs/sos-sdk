@@ -1,38 +1,12 @@
 import {
   getBorrowFromPoolInstructionAsync,
-  getDepositToPoolInstructionAsync,
   getRepayPoolLoanInstructionAsync,
   getRepayPoolLoanFromCollateralInstructionAsync,
-  getWithdrawFromPoolInstructionAsync,
 } from "../generated/instructions";
 import type { Instruction } from "@solana/kit";
 import { toAddress } from "../client/program";
 import type { AddressLike, BuiltTransaction } from "../client/types";
 import { assertNonNegativeAmount, assertPositiveAmount } from "../shared/amounts";
-
-export interface BuildDepositToPoolParams {
-  optionPool: AddressLike;
-  optionAccount: AddressLike;
-  makerOptionAccount: AddressLike;
-  escrowLongAccount: AddressLike;
-  maker: AddressLike;
-  amount: bigint | number;
-  makerPoolShare?: AddressLike;
-  tokenProgram?: AddressLike;
-  associatedTokenProgram?: AddressLike;
-  systemProgram?: AddressLike;
-}
-
-export interface BuildWithdrawFromPoolParams {
-  optionPool: AddressLike;
-  optionAccount: AddressLike;
-  makerOptionAccount: AddressLike;
-  escrowLongAccount: AddressLike;
-  maker: AddressLike;
-  amount: bigint | number;
-  makerPoolShare?: AddressLike;
-  tokenProgram?: AddressLike;
-}
 
 export interface BuildBorrowFromPoolParams {
   vault: AddressLike;
@@ -75,61 +49,6 @@ export interface BuildRepayPoolLoanFromCollateralParams {
   maker: AddressLike;
   collateralPool?: AddressLike;
   tokenProgram?: AddressLike;
-}
-
-export async function buildDepositToPoolInstruction(
-  params: BuildDepositToPoolParams
-): Promise<Instruction<string>> {
-  assertPositiveAmount(params.amount, "amount");
-
-  return getDepositToPoolInstructionAsync({
-    optionPool: toAddress(params.optionPool),
-    optionAccount: toAddress(params.optionAccount),
-    makerPoolShare: params.makerPoolShare ? toAddress(params.makerPoolShare) : undefined,
-    makerOptionAccount: toAddress(params.makerOptionAccount),
-    escrowLongAccount: toAddress(params.escrowLongAccount),
-    maker: toAddress(params.maker) as any,
-    tokenProgram: params.tokenProgram ? toAddress(params.tokenProgram) : undefined,
-    associatedTokenProgram: params.associatedTokenProgram
-      ? toAddress(params.associatedTokenProgram)
-      : undefined,
-    systemProgram: params.systemProgram ? toAddress(params.systemProgram) : undefined,
-    amount: params.amount,
-  });
-}
-
-export async function buildDepositToPoolTransaction(
-  params: BuildDepositToPoolParams
-): Promise<BuiltTransaction> {
-  const instruction = await buildDepositToPoolInstruction(params);
-  return { instructions: [instruction] };
-}
-
-export async function buildWithdrawFromPoolInstruction(
-  params: BuildWithdrawFromPoolParams
-): Promise<Instruction<string>> {
-  assertPositiveAmount(params.amount, "amount");
-
-  return getWithdrawFromPoolInstructionAsync({
-    optionPool: toAddress(params.optionPool),
-    optionAccount: toAddress(params.optionAccount),
-    makerPoolShare: params.makerPoolShare ? toAddress(params.makerPoolShare) : undefined,
-    makerOptionAccount: toAddress(params.makerOptionAccount),
-    escrowLongAccount: toAddress(params.escrowLongAccount),
-    maker: toAddress(params.maker) as any,
-    tokenProgram: params.tokenProgram ? toAddress(params.tokenProgram) : undefined,
-    amount: params.amount,
-  });
-}
-
-/**
- * Builds a pool withdraw instruction set for an LP maker position.
- */
-export async function buildWithdrawFromPoolTransaction(
-  params: BuildWithdrawFromPoolParams
-): Promise<BuiltTransaction> {
-  const instruction = await buildWithdrawFromPoolInstruction(params);
-  return { instructions: [instruction] };
 }
 
 export async function buildBorrowFromPoolInstruction(

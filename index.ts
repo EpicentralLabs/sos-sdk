@@ -18,7 +18,7 @@ export * from "./long/exercise";
 export * from "./long/quotes";
 
 export * from "./short/builders";
-export * from "./short/claim-premium";
+export * from "./short/claim-theta";
 export * from "./short/close-option";
 export * from "./short/pool";
 

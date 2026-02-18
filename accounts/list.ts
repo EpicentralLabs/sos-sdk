@@ -1,19 +1,16 @@
 import bs58 from "bs58";
 import type { Address } from "@solana/kit";
 import {
-  MAKER_POOL_SHARE_DISCRIMINATOR,
   OPTION_POOL_DISCRIMINATOR,
   POOL_LOAN_DISCRIMINATOR,
   POSITION_ACCOUNT_DISCRIMINATOR,
   VAULT_DISCRIMINATOR,
   WRITER_POSITION_DISCRIMINATOR,
-  getMakerPoolShareDecoder,
   getOptionPoolDecoder,
   getPoolLoanDecoder,
   getPositionAccountDecoder,
   getVaultDecoder,
   getWriterPositionDecoder,
-  type MakerPoolShare,
   type OptionPool,
   type PoolLoan,
   type PositionAccount,
@@ -89,16 +86,6 @@ async function fetchAndDecodeProgramAccounts<T>(
       data: decoder.decode(decodeBase64Data(base64Data)),
     };
   });
-}
-
-export async function fetchMakerPoolSharesByMaker(
-  rpc: KitRpc,
-  maker: AddressLike
-): Promise<Array<ListedAccount<MakerPoolShare>>> {
-  return fetchAndDecodeProgramAccounts(rpc, getMakerPoolShareDecoder(), [
-    discriminatorFilter(MAKER_POOL_SHARE_DISCRIMINATOR),
-    ownerFilter(maker),
-  ]);
 }
 
 export async function fetchWriterPositionsByWriter(

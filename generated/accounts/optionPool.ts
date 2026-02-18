@@ -79,6 +79,7 @@ export type OptionPool = {
   totalOpenInterestQty: bigint;
   accClosedPerOiFp: bigint;
   accPayoutPerOiFp: bigint;
+  accThetaPerOiFp: bigint;
   makerCount: number;
   createdAt: bigint;
   lastUpdated: bigint;
@@ -109,6 +110,7 @@ export type OptionPoolArgs = {
   totalOpenInterestQty: number | bigint;
   accClosedPerOiFp: number | bigint;
   accPayoutPerOiFp: number | bigint;
+  accThetaPerOiFp: number | bigint;
   makerCount: number;
   createdAt: number | bigint;
   lastUpdated: number | bigint;
@@ -143,6 +145,7 @@ export function getOptionPoolEncoder(): FixedSizeEncoder<OptionPoolArgs> {
       ["totalOpenInterestQty", getU64Encoder()],
       ["accClosedPerOiFp", getU128Encoder()],
       ["accPayoutPerOiFp", getU128Encoder()],
+      ["accThetaPerOiFp", getU128Encoder()],
       ["makerCount", getU32Encoder()],
       ["createdAt", getI64Encoder()],
       ["lastUpdated", getI64Encoder()],
@@ -179,6 +182,7 @@ export function getOptionPoolDecoder(): FixedSizeDecoder<OptionPool> {
     ["totalOpenInterestQty", getU64Decoder()],
     ["accClosedPerOiFp", getU128Decoder()],
     ["accPayoutPerOiFp", getU128Decoder()],
+    ["accThetaPerOiFp", getU128Decoder()],
     ["makerCount", getU32Decoder()],
     ["createdAt", getI64Decoder()],
     ["lastUpdated", getI64Decoder()],
@@ -249,5 +253,5 @@ export async function fetchAllMaybeOptionPool(
 }
 
 export function getOptionPoolSize(): number {
-  return 366;
+  return 382;
 }

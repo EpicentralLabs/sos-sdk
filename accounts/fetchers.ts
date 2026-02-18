@@ -1,7 +1,6 @@
 import {
   getCollateralPoolDecoder,
   getLenderPositionDecoder,
-  getMakerPoolShareDecoder,
   getMarketDataAccountDecoder,
   getOptionAccountDecoder,
   getOptionPoolDecoder,
@@ -11,7 +10,6 @@ import {
   getWriterPositionDecoder,
   type CollateralPool,
   type LenderPosition,
-  type MakerPoolShare,
   type MarketDataAccount,
   type OptionAccount,
   type OptionPool,
@@ -102,13 +100,6 @@ export async function fetchMarketDataAccount(
   marketData: AddressLike
 ): Promise<MarketDataAccount | null> {
   return decodeAccount(rpc, marketData, getMarketDataAccountDecoder());
-}
-
-export async function fetchMakerPoolShare(
-  rpc: KitRpc,
-  makerPoolShare: AddressLike
-): Promise<MakerPoolShare | null> {
-  return decodeAccount(rpc, makerPoolShare, getMakerPoolShareDecoder());
 }
 
 export async function fetchPoolLoan(
