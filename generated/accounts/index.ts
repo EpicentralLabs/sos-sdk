@@ -8,10 +8,8 @@
 
 export * from "./collateralPool";
 export * from "./config";
-export * from "./dualSourceContract";
 export * from "./escrowState";
 export * from "./lenderPosition";
-export * from "./liquidityRouter";
 export * from "./makerCollateralShare";
 export * from "./marketDataAccount";
 export * from "./optionAccount";

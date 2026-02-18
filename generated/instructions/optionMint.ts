@@ -92,7 +92,6 @@ export type OptionMintInstruction<
   TAccountEscrowAuthority extends string | AccountMeta<string> = string,
   TAccountEscrowTokenAccount extends string | AccountMeta<string> = string,
   TAccountPoolLoan extends string | AccountMeta<string> = string,
-  TAccountLiquidityRouter extends string | AccountMeta<string> = string,
   TAccountMaker extends string | AccountMeta<string> = string,
   TAccountTokenProgram extends string | AccountMeta<string> =
     "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
@@ -178,9 +177,6 @@ export type OptionMintInstruction<
       TAccountPoolLoan extends string
         ? WritableAccount<TAccountPoolLoan>
         : TAccountPoolLoan,
-      TAccountLiquidityRouter extends string
-        ? WritableAccount<TAccountLiquidityRouter>
-        : TAccountLiquidityRouter,
       TAccountMaker extends string
         ? WritableSignerAccount<TAccountMaker> &
             AccountSignerMeta<TAccountMaker>
@@ -298,7 +294,6 @@ export type OptionMintAsyncInput<
   TAccountEscrowAuthority extends string = string,
   TAccountEscrowTokenAccount extends string = string,
   TAccountPoolLoan extends string = string,
-  TAccountLiquidityRouter extends string = string,
   TAccountMaker extends string = string,
   TAccountTokenProgram extends string = string,
   TAccountAssociatedTokenProgram extends string = string,
@@ -358,8 +353,6 @@ export type OptionMintAsyncInput<
   escrowTokenAccount?: Address<TAccountEscrowTokenAccount>;
   /** Pool loan account (optional - only required if borrowing) */
   poolLoan?: Address<TAccountPoolLoan>;
-  /** Liquidity router (optional - only required if borrowing with SAP1/SAP2 failover) */
-  liquidityRouter?: Address<TAccountLiquidityRouter>;
   maker: TransactionSigner<TAccountMaker>;
   tokenProgram?: Address<TAccountTokenProgram>;
   associatedTokenProgram?: Address<TAccountAssociatedTokenProgram>;
@@ -400,7 +393,6 @@ export async function getOptionMintInstructionAsync<
   TAccountEscrowAuthority extends string,
   TAccountEscrowTokenAccount extends string,
   TAccountPoolLoan extends string,
-  TAccountLiquidityRouter extends string,
   TAccountMaker extends string,
   TAccountTokenProgram extends string,
   TAccountAssociatedTokenProgram extends string,
@@ -433,7 +425,6 @@ export async function getOptionMintInstructionAsync<
     TAccountEscrowAuthority,
     TAccountEscrowTokenAccount,
     TAccountPoolLoan,
-    TAccountLiquidityRouter,
     TAccountMaker,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
@@ -468,7 +459,6 @@ export async function getOptionMintInstructionAsync<
     TAccountEscrowAuthority,
     TAccountEscrowTokenAccount,
     TAccountPoolLoan,
-    TAccountLiquidityRouter,
     TAccountMaker,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
@@ -533,7 +523,6 @@ export async function getOptionMintInstructionAsync<
       isWritable: true,
     },
     poolLoan: { value: input.poolLoan ?? null, isWritable: true },
-    liquidityRouter: { value: input.liquidityRouter ?? null, isWritable: true },
     maker: { value: input.maker ?? null, isWritable: true },
     tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
     associatedTokenProgram: {
@@ -795,7 +784,6 @@ export async function getOptionMintInstructionAsync<
       getAccountMeta(accounts.escrowAuthority),
       getAccountMeta(accounts.escrowTokenAccount),
       getAccountMeta(accounts.poolLoan),
-      getAccountMeta(accounts.liquidityRouter),
       getAccountMeta(accounts.maker),
       getAccountMeta(accounts.tokenProgram),
       getAccountMeta(accounts.associatedTokenProgram),
@@ -832,7 +820,6 @@ export async function getOptionMintInstructionAsync<
     TAccountEscrowAuthority,
     TAccountEscrowTokenAccount,
     TAccountPoolLoan,
-    TAccountLiquidityRouter,
     TAccountMaker,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
@@ -866,7 +853,6 @@ export type OptionMintInput<
   TAccountEscrowAuthority extends string = string,
   TAccountEscrowTokenAccount extends string = string,
   TAccountPoolLoan extends string = string,
-  TAccountLiquidityRouter extends string = string,
   TAccountMaker extends string = string,
   TAccountTokenProgram extends string = string,
   TAccountAssociatedTokenProgram extends string = string,
@@ -926,8 +912,6 @@ export type OptionMintInput<
   escrowTokenAccount?: Address<TAccountEscrowTokenAccount>;
   /** Pool loan account (optional - only required if borrowing) */
   poolLoan?: Address<TAccountPoolLoan>;
-  /** Liquidity router (optional - only required if borrowing with SAP1/SAP2 failover) */
-  liquidityRouter?: Address<TAccountLiquidityRouter>;
   maker: TransactionSigner<TAccountMaker>;
   tokenProgram?: Address<TAccountTokenProgram>;
   associatedTokenProgram?: Address<TAccountAssociatedTokenProgram>;
@@ -968,7 +952,6 @@ export function getOptionMintInstruction<
   TAccountEscrowAuthority extends string,
   TAccountEscrowTokenAccount extends string,
   TAccountPoolLoan extends string,
-  TAccountLiquidityRouter extends string,
   TAccountMaker extends string,
   TAccountTokenProgram extends string,
   TAccountAssociatedTokenProgram extends string,
@@ -1001,7 +984,6 @@ export function getOptionMintInstruction<
     TAccountEscrowAuthority,
     TAccountEscrowTokenAccount,
     TAccountPoolLoan,
-    TAccountLiquidityRouter,
     TAccountMaker,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
@@ -1035,7 +1017,6 @@ export function getOptionMintInstruction<
   TAccountEscrowAuthority,
   TAccountEscrowTokenAccount,
   TAccountPoolLoan,
-  TAccountLiquidityRouter,
   TAccountMaker,
   TAccountTokenProgram,
   TAccountAssociatedTokenProgram,
@@ -1099,7 +1080,6 @@ export function getOptionMintInstruction<
       isWritable: true,
     },
     poolLoan: { value: input.poolLoan ?? null, isWritable: true },
-    liquidityRouter: { value: input.liquidityRouter ?? null, isWritable: true },
     maker: { value: input.maker ?? null, isWritable: true },
     tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
     associatedTokenProgram: {
@@ -1169,7 +1149,6 @@ export function getOptionMintInstruction<
       getAccountMeta(accounts.escrowAuthority),
       getAccountMeta(accounts.escrowTokenAccount),
       getAccountMeta(accounts.poolLoan),
-      getAccountMeta(accounts.liquidityRouter),
       getAccountMeta(accounts.maker),
       getAccountMeta(accounts.tokenProgram),
       getAccountMeta(accounts.associatedTokenProgram),
@@ -1206,7 +1185,6 @@ export function getOptionMintInstruction<
     TAccountEscrowAuthority,
     TAccountEscrowTokenAccount,
     TAccountPoolLoan,
-    TAccountLiquidityRouter,
     TAccountMaker,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
@@ -1274,14 +1252,12 @@ export type ParsedOptionMintInstruction<
     escrowTokenAccount?: TAccountMetas[21] | undefined;
     /** Pool loan account (optional - only required if borrowing) */
     poolLoan?: TAccountMetas[22] | undefined;
-    /** Liquidity router (optional - only required if borrowing with SAP1/SAP2 failover) */
-    liquidityRouter?: TAccountMetas[23] | undefined;
-    maker: TAccountMetas[24];
-    tokenProgram: TAccountMetas[25];
-    associatedTokenProgram: TAccountMetas[26];
-    tokenMetadataProgram: TAccountMetas[27];
-    systemProgram: TAccountMetas[28];
-    rent: TAccountMetas[29];
+    maker: TAccountMetas[23];
+    tokenProgram: TAccountMetas[24];
+    associatedTokenProgram: TAccountMetas[25];
+    tokenMetadataProgram: TAccountMetas[26];
+    systemProgram: TAccountMetas[27];
+    rent: TAccountMetas[28];
   };
   data: OptionMintInstructionData;
 };
@@ -1294,7 +1270,7 @@ export function parseOptionMintInstruction<
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedOptionMintInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 30) {
+  if (instruction.accounts.length < 29) {
     // TODO: Coded error.
     throw new Error("Not enough accounts");
   }
@@ -1336,7 +1312,6 @@ export function parseOptionMintInstruction<
       escrowAuthority: getNextOptionalAccount(),
       escrowTokenAccount: getNextOptionalAccount(),
       poolLoan: getNextOptionalAccount(),
-      liquidityRouter: getNextOptionalAccount(),
       maker: getNextAccount(),
       tokenProgram: getNextAccount(),
       associatedTokenProgram: getNextAccount(),

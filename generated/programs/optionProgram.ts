@@ -26,7 +26,6 @@ import {
   parseCloseLongToPoolInstruction,
   parseCloseOptionInstruction,
   parseCreateEscrowV2Instruction,
-  parseCreateLiquidityRouterInstruction,
   parseDepositCollateralInstruction,
   parseDepositToPositionInstruction,
   parseInitCollateralPoolInstruction,
@@ -35,7 +34,6 @@ import {
   parseInitOptionPoolInstruction,
   parseLiquidateWriterPositionInstruction,
   parseOmlpCreateVaultInstruction,
-  parseOmlpTakeOfferWithFailoverInstruction,
   parseOmlpUpdateMaxLeverageInstruction,
   parseOmlpUpdateProtocolFeeInstruction,
   parseOmlpUpdateSupplyLimitInstruction,
@@ -61,7 +59,6 @@ import {
   type ParsedCloseLongToPoolInstruction,
   type ParsedCloseOptionInstruction,
   type ParsedCreateEscrowV2Instruction,
-  type ParsedCreateLiquidityRouterInstruction,
   type ParsedDepositCollateralInstruction,
   type ParsedDepositToPositionInstruction,
   type ParsedInitCollateralPoolInstruction,
@@ -70,7 +67,6 @@ import {
   type ParsedInitOptionPoolInstruction,
   type ParsedLiquidateWriterPositionInstruction,
   type ParsedOmlpCreateVaultInstruction,
-  type ParsedOmlpTakeOfferWithFailoverInstruction,
   type ParsedOmlpUpdateMaxLeverageInstruction,
   type ParsedOmlpUpdateProtocolFeeInstruction,
   type ParsedOmlpUpdateSupplyLimitInstruction,
@@ -95,10 +91,8 @@ export const OPTION_PROGRAM_PROGRAM_ADDRESS =
 export enum OptionProgramAccount {
   CollateralPool,
   Config,
-  DualSourceContract,
   EscrowState,
   LenderPosition,
-  LiquidityRouter,
   MakerCollateralShare,
   MarketDataAccount,
   OptionAccount,
@@ -140,17 +134,6 @@ export function identifyOptionProgramAccount(
     containsBytes(
       data,
       fixEncoderSize(getBytesEncoder(), 8).encode(
-        new Uint8Array([114, 105, 97, 181, 162, 170, 126, 215]),
-      ),
-      0,
-    )
-  ) {
-    return OptionProgramAccount.DualSourceContract;
-  }
-  if (
-    containsBytes(
-      data,
-      fixEncoderSize(getBytesEncoder(), 8).encode(
         new Uint8Array([19, 90, 148, 111, 55, 130, 229, 108]),
       ),
       0,
@@ -168,17 +151,6 @@ export function identifyOptionProgramAccount(
     )
   ) {
     return OptionProgramAccount.LenderPosition;
-  }
-  if (
-    containsBytes(
-      data,
-      fixEncoderSize(getBytesEncoder(), 8).encode(
-        new Uint8Array([151, 96, 76, 12, 200, 0, 147, 111]),
-      ),
-      0,
-    )
-  ) {
-    return OptionProgramAccount.LiquidityRouter;
   }
   if (
     containsBytes(
@@ -294,7 +266,6 @@ export enum OptionProgramInstruction {
   CloseLongToPool,
   CloseOption,
   CreateEscrowV2,
-  CreateLiquidityRouter,
   DepositCollateral,
   DepositToPosition,
   InitCollateralPool,
@@ -303,7 +274,6 @@ export enum OptionProgramInstruction {
   InitializeMarketData,
   LiquidateWriterPosition,
   OmlpCreateVault,
-  OmlpTakeOfferWithFailover,
   OmlpUpdateMaxLeverage,
   OmlpUpdateProtocolFee,
   OmlpUpdateSupplyLimit,
@@ -429,17 +399,6 @@ export function identifyOptionProgramInstruction(
     containsBytes(
       data,
       fixEncoderSize(getBytesEncoder(), 8).encode(
-        new Uint8Array([226, 122, 201, 80, 25, 49, 83, 84]),
-      ),
-      0,
-    )
-  ) {
-    return OptionProgramInstruction.CreateLiquidityRouter;
-  }
-  if (
-    containsBytes(
-      data,
-      fixEncoderSize(getBytesEncoder(), 8).encode(
         new Uint8Array([156, 131, 142, 116, 146, 247, 162, 120]),
       ),
       0,
@@ -523,17 +482,6 @@ export function identifyOptionProgramInstruction(
     )
   ) {
     return OptionProgramInstruction.OmlpCreateVault;
-  }
-  if (
-    containsBytes(
-      data,
-      fixEncoderSize(getBytesEncoder(), 8).encode(
-        new Uint8Array([39, 155, 118, 226, 84, 159, 5, 76]),
-      ),
-      0,
-    )
-  ) {
-    return OptionProgramInstruction.OmlpTakeOfferWithFailover;
   }
   if (
     containsBytes(
@@ -747,9 +695,6 @@ export type ParsedOptionProgramInstruction<
       instructionType: OptionProgramInstruction.CreateEscrowV2;
     } & ParsedCreateEscrowV2Instruction<TProgram>)
   | ({
-      instructionType: OptionProgramInstruction.CreateLiquidityRouter;
-    } & ParsedCreateLiquidityRouterInstruction<TProgram>)
-  | ({
       instructionType: OptionProgramInstruction.DepositCollateral;
     } & ParsedDepositCollateralInstruction<TProgram>)
   | ({
@@ -773,9 +718,6 @@ export type ParsedOptionProgramInstruction<
   | ({
       instructionType: OptionProgramInstruction.OmlpCreateVault;
     } & ParsedOmlpCreateVaultInstruction<TProgram>)
-  | ({
-      instructionType: OptionProgramInstruction.OmlpTakeOfferWithFailover;
-    } & ParsedOmlpTakeOfferWithFailoverInstruction<TProgram>)
   | ({
       instructionType: OptionProgramInstruction.OmlpUpdateMaxLeverage;
     } & ParsedOmlpUpdateMaxLeverageInstruction<TProgram>)
@@ -893,13 +835,6 @@ export function parseOptionProgramInstruction<TProgram extends string>(
         ...parseCreateEscrowV2Instruction(instruction),
       };
     }
-    case OptionProgramInstruction.CreateLiquidityRouter: {
-      assertIsInstructionWithAccounts(instruction);
-      return {
-        instructionType: OptionProgramInstruction.CreateLiquidityRouter,
-        ...parseCreateLiquidityRouterInstruction(instruction),
-      };
-    }
     case OptionProgramInstruction.DepositCollateral: {
       assertIsInstructionWithAccounts(instruction);
       return {
@@ -954,13 +889,6 @@ export function parseOptionProgramInstruction<TProgram extends string>(
       return {
         instructionType: OptionProgramInstruction.OmlpCreateVault,
         ...parseOmlpCreateVaultInstruction(instruction),
-      };
-    }
-    case OptionProgramInstruction.OmlpTakeOfferWithFailover: {
-      assertIsInstructionWithAccounts(instruction);
-      return {
-        instructionType: OptionProgramInstruction.OmlpTakeOfferWithFailover,
-        ...parseOmlpTakeOfferWithFailoverInstruction(instruction),
       };
     }
     case OptionProgramInstruction.OmlpUpdateMaxLeverage: {
