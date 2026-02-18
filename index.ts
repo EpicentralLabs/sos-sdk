@@ -24,3 +24,11 @@ export * from "./short/pool";
 
 export * from "./omlp/builders";
 export * from "./omlp/service";
+
+export {
+  getWrapSOLInstructions,
+  getUnwrapSOLInstructions,
+  getSyncNativeInstruction,
+  getCloseAccountInstruction,
+  NATIVE_MINT,
+} from "./wsol/instructions";
