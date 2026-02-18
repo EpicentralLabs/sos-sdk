@@ -7,10 +7,15 @@ import {
   VAULT_DISCRIMINATOR,
   WRITER_POSITION_DISCRIMINATOR,
   getOptionPoolDecoder,
+  getOptionPoolSize,
   getPoolLoanDecoder,
+  getPoolLoanSize,
   getPositionAccountDecoder,
+  getPositionAccountSize,
   getVaultDecoder,
+  getVaultSize,
   getWriterPositionDecoder,
+  getWriterPositionSize,
   type OptionPool,
   type PoolLoan,
   type PositionAccount,
@@ -32,7 +37,7 @@ type ListedAccount<T> = {
 type ProgramAccountResponse = {
   pubkey: Address;
   account: {
-    data: [string, string];
+    data: [string, string] | string;
   };
 };
 
@@ -80,7 +85,8 @@ async function fetchAndDecodeProgramAccounts<T>(
     : (response as { value: Array<ProgramAccountResponse> }).value;
 
   return rawAccounts.map(({ pubkey, account }) => {
-    const [base64Data] = account.data;
+    const base64Data =
+      Array.isArray(account.data) ? account.data[0] : account.data;
     return {
       address: pubkey,
       data: decoder.decode(decodeBase64Data(base64Data)),
@@ -95,6 +101,7 @@ export async function fetchWriterPositionsByWriter(
   return fetchAndDecodeProgramAccounts(rpc, getWriterPositionDecoder(), [
     discriminatorFilter(WRITER_POSITION_DISCRIMINATOR),
     ownerFilter(writer),
+    { dataSize: BigInt(getWriterPositionSize()) },
   ]);
 }
 
@@ -105,6 +112,7 @@ export async function fetchPositionAccountsByBuyer(
   return fetchAndDecodeProgramAccounts(rpc, getPositionAccountDecoder(), [
     discriminatorFilter(POSITION_ACCOUNT_DISCRIMINATOR),
     ownerFilter(buyer),
+    { dataSize: BigInt(getPositionAccountSize()) },
   ]);
 }
 
@@ -115,6 +123,7 @@ export async function fetchPoolLoansByMaker(
   const decoded = await fetchAndDecodeProgramAccounts(rpc, getPoolLoanDecoder(), [
     discriminatorFilter(POOL_LOAN_DISCRIMINATOR),
     ownerFilter(maker),
+    { dataSize: BigInt(getPoolLoanSize()) },
   ]);
   return decoded.filter(
     (item: { address: Address; data: PoolLoan }) =>
@@ -127,6 +136,7 @@ export async function fetchAllOptionPools(
 ): Promise<Array<ListedAccount<OptionPool>>> {
   return fetchAndDecodeProgramAccounts(rpc, getOptionPoolDecoder(), [
     discriminatorFilter(OPTION_POOL_DISCRIMINATOR),
+    { dataSize: BigInt(getOptionPoolSize()) },
   ]);
 }
 
@@ -135,5 +145,6 @@ export async function fetchAllVaults(
 ): Promise<Array<ListedAccount<Vault>>> {
   return fetchAndDecodeProgramAccounts(rpc, getVaultDecoder(), [
     discriminatorFilter(VAULT_DISCRIMINATOR),
+    { dataSize: BigInt(getVaultSize()) },
   ]);
 }
