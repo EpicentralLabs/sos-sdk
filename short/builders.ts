@@ -55,7 +55,6 @@ export interface BuildOptionMintParams {
   escrowAuthority?: AddressLike;
   escrowTokenAccount?: AddressLike;
   poolLoan?: AddressLike;
-  liquidityRouter?: AddressLike;
   remainingAccounts?: RemainingAccountInput[];
 }
 
@@ -168,7 +167,6 @@ export async function buildOptionMintInstruction(
       ? toAddress(params.escrowTokenAccount)
       : undefined,
     poolLoan: params.poolLoan ? toAddress(params.poolLoan) : undefined,
-    liquidityRouter: params.liquidityRouter ? toAddress(params.liquidityRouter) : undefined,
     maker: toAddress(params.maker) as any,
     optionType: params.optionType,
     strikePrice: params.strikePrice,
@@ -210,7 +208,6 @@ export interface BuildOptionMintTransactionWithDerivationParams {
   escrowAuthority?: AddressLike;
   escrowTokenAccount?: AddressLike;
   poolLoan?: AddressLike;
-  liquidityRouter?: AddressLike;
   remainingAccounts?: RemainingAccountInput[];
 }
 
@@ -278,7 +275,6 @@ export async function buildOptionMintTransactionWithDerivation(
     escrowAuthority: params.escrowAuthority,
     escrowTokenAccount: params.escrowTokenAccount,
     poolLoan: params.poolLoan,
-    liquidityRouter: params.liquidityRouter,
     remainingAccounts: params.remainingAccounts,
   });
 }

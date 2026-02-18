@@ -1,3 +1,8 @@
+/**
+ * OMLP (Option Maker Liquidity Pool) service – V2 pool-based API only.
+ * Exposes: depositToPosition, withdrawFromPosition, withdrawAllFromPosition, withdrawInterestFromPosition.
+ * Borrow/repay use short/pool (buildBorrowFromPool*, buildRepayPoolLoan*). Legacy offer-based instructions are not exposed.
+ */
 import { fetchLenderPosition, fetchVault } from "../accounts/fetchers";
 import type { KitRpc } from "../client/types";
 import {

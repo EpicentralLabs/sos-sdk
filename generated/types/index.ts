@@ -6,13 +6,8 @@
  * @see https://github.com/codama-idl/codama
  */
 
-export * from "./borrowedFromSAP1";
-export * from "./borrowedFromSAP2";
-export * from "./failoverTriggered";
 export * from "./impliedVolatilityUpdated";
 export * from "./liquidationExecuted";
-export * from "./liquidityMetrics";
-export * from "./liquidityRouterCreated";
 export * from "./marketDataInitialized";
 export * from "./marketDataUpdated";
 export * from "./optionClosed";
@@ -27,6 +22,5 @@ export * from "./positionDeposited";
 export * from "./positionWithdrawn";
 export * from "./priceFeedMessage";
 export * from "./protocolFeeUpdated";
-export * from "./sap2Provider";
 export * from "./vaultCreated";
 export * from "./verificationLevel";
