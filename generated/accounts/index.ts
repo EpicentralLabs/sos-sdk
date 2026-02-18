@@ -13,7 +13,6 @@ export * from "./escrowState";
 export * from "./lenderPosition";
 export * from "./liquidityRouter";
 export * from "./makerCollateralShare";
-export * from "./makerPoolShare";
 export * from "./marketDataAccount";
 export * from "./optionAccount";
 export * from "./optionPool";

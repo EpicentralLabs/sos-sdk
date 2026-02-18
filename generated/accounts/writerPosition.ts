@@ -77,10 +77,12 @@ export type WriterPosition = {
   borrowedPrincipal: bigint;
   /** Number of active PoolLoan accounts for this writer */
   activeLoanCount: number;
-  /** Total premium earned from sales */
-  premiumEarned: bigint;
-  /** Premium already claimed/withdrawn */
-  premiumClaimed: bigint;
+  /** Theta (time-decay) allocated to this writer (from pool accumulator) */
+  thetaEarned: bigint;
+  /** Theta already claimed/withdrawn */
+  thetaClaimed: bigint;
+  /** Snapshot of pool's acc_theta_per_oi_fp at last claim (reward-debt pattern) */
+  lastPoolAccThetaFp: bigint;
   /** Snapshot of pool's acc_closed_per_oi_fp at last sync */
   lastPoolAccClosedFp: bigint;
   /** Snapshot of pool's acc_payout_per_oi_fp at last sync */
@@ -127,10 +129,12 @@ export type WriterPositionArgs = {
   borrowedPrincipal: number | bigint;
   /** Number of active PoolLoan accounts for this writer */
   activeLoanCount: number;
-  /** Total premium earned from sales */
-  premiumEarned: number | bigint;
-  /** Premium already claimed/withdrawn */
-  premiumClaimed: number | bigint;
+  /** Theta (time-decay) allocated to this writer (from pool accumulator) */
+  thetaEarned: number | bigint;
+  /** Theta already claimed/withdrawn */
+  thetaClaimed: number | bigint;
+  /** Snapshot of pool's acc_theta_per_oi_fp at last claim (reward-debt pattern) */
+  lastPoolAccThetaFp: number | bigint;
   /** Snapshot of pool's acc_closed_per_oi_fp at last sync */
   lastPoolAccClosedFp: number | bigint;
   /** Snapshot of pool's acc_payout_per_oi_fp at last sync */
@@ -171,8 +175,9 @@ export function getWriterPositionEncoder(): FixedSizeEncoder<WriterPositionArgs>
       ["collateralDeposited", getU64Encoder()],
       ["borrowedPrincipal", getU64Encoder()],
       ["activeLoanCount", getU8Encoder()],
-      ["premiumEarned", getU64Encoder()],
-      ["premiumClaimed", getU64Encoder()],
+      ["thetaEarned", getU64Encoder()],
+      ["thetaClaimed", getU64Encoder()],
+      ["lastPoolAccThetaFp", getU128Encoder()],
       ["lastPoolAccClosedFp", getU128Encoder()],
       ["lastPoolAccPayoutFp", getU128Encoder()],
       ["closedQtyDebtFp", getU128Encoder()],
@@ -205,8 +210,9 @@ export function getWriterPositionDecoder(): FixedSizeDecoder<WriterPosition> {
     ["collateralDeposited", getU64Decoder()],
     ["borrowedPrincipal", getU64Decoder()],
     ["activeLoanCount", getU8Decoder()],
-    ["premiumEarned", getU64Decoder()],
-    ["premiumClaimed", getU64Decoder()],
+    ["thetaEarned", getU64Decoder()],
+    ["thetaClaimed", getU64Decoder()],
+    ["lastPoolAccThetaFp", getU128Decoder()],
     ["lastPoolAccClosedFp", getU128Decoder()],
     ["lastPoolAccPayoutFp", getU128Decoder()],
     ["closedQtyDebtFp", getU128Decoder()],
@@ -293,5 +299,5 @@ export async function fetchAllMaybeWriterPosition(
 }
 
 export function getWriterPositionSize(): number {
-  return 284;
+  return 300;
 }
