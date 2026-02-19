@@ -21,6 +21,7 @@ import {
   appendRemainingAccounts,
   type RemainingAccountInput,
 } from "../shared/remaining-accounts";
+import { getCreateAssociatedTokenIdempotentInstructionWithAddress } from "../wsol/instructions";
 
 export interface BuildOptionMintParams {
   optionType: OptionType;
@@ -199,7 +200,7 @@ export interface BuildOptionMintTransactionWithDerivationParams {
   makerCollateralAmount: bigint | number;
   borrowedAmount: bigint | number;
   maker: AddressLike;
-  makerCollateralAccount: AddressLike;
+  makerCollateralAccount?: AddressLike;
   rpc: KitRpc;
   programId?: AddressLike;
   vault?: AddressLike;
@@ -247,11 +248,15 @@ export async function buildOptionMintTransactionWithDerivation(
     deriveAssociatedTokenAddress(params.maker, resolved.longMint),
     deriveAssociatedTokenAddress(params.maker, resolved.shortMint),
   ]);
+  const makerCollateralAccount = params.makerCollateralAccount
+    ? toAddress(params.makerCollateralAccount)
+    : await deriveAssociatedTokenAddress(params.maker, underlyingMint);
 
-  return buildOptionMintTransaction({
+  const tx = await buildOptionMintTransaction({
     ...params,
     underlyingAsset: params.underlyingAsset,
     underlyingMint,
+    makerCollateralAccount,
     optionAccount: resolved.optionAccount,
     longMint: resolved.longMint,
     shortMint: resolved.shortMint,
@@ -272,6 +277,18 @@ export async function buildOptionMintTransactionWithDerivation(
     poolLoan: params.poolLoan,
     remainingAccounts: params.remainingAccounts,
   });
+
+  const createAtaIx =
+    await getCreateAssociatedTokenIdempotentInstructionWithAddress(
+      params.maker,
+      params.maker,
+      underlyingMint,
+      makerCollateralAccount
+    );
+
+  return {
+    instructions: [createAtaIx, ...tx.instructions],
+  };
 }
 
 export async function buildUnwindWriterUnsoldInstruction(

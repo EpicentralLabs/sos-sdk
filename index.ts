@@ -31,5 +31,6 @@ export {
   getUnwrapSOLInstructions,
   getSyncNativeInstruction,
   getCloseAccountInstruction,
+  getCreateAssociatedTokenIdempotentInstructionWithAddress,
   NATIVE_MINT,
 } from "./wsol/instructions";

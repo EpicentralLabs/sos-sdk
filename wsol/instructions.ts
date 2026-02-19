@@ -101,6 +101,32 @@ export function getCloseAccountInstruction(
 }
 
 /**
+ * Builds the Associated Token Program CreateIdempotent instruction with payer as
+ * AddressLike (no signer object). Safe to add even if the ATA already exists.
+ * The payer must sign the transaction when it is submitted.
+ */
+export async function getCreateAssociatedTokenIdempotentInstructionWithAddress(
+  payer: AddressLike,
+  owner: AddressLike,
+  mint: AddressLike,
+  associatedToken: Address
+): Promise<Instruction<string>> {
+  const programAddress = ASSOCIATED_TOKEN_PROGRAM_ADDRESS;
+  return Object.freeze({
+    programAddress,
+    accounts: [
+      accountMeta(toAddress(payer), AccountRole.WRITABLE_SIGNER),
+      accountMeta(associatedToken, AccountRole.WRITABLE),
+      accountMeta(toAddress(owner), AccountRole.READONLY),
+      accountMeta(toAddress(mint), AccountRole.READONLY),
+      accountMeta(SYSTEM_PROGRAM_ADDRESS, AccountRole.READONLY),
+      accountMeta(TOKEN_PROGRAM_ADDRESS, AccountRole.READONLY),
+    ],
+    data: new Uint8Array([CREATE_ASSOCIATED_TOKEN_IDEMPOTENT_DISCRIMINATOR]),
+  });
+}
+
+/**
  * Builds the Associated Token Program CreateIdempotent instruction. Safe to add
  * even if the ATA already exists.
  */
