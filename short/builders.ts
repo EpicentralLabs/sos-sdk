@@ -200,6 +200,7 @@ export interface BuildOptionMintTransactionWithDerivationParams {
   makerCollateralAmount: bigint | number;
   borrowedAmount: bigint | number;
   maker: AddressLike;
+  /** Optional. When omitted, the SDK derives the maker's collateral ATA for underlyingMint. */
   makerCollateralAccount?: AddressLike;
   rpc: KitRpc;
   programId?: AddressLike;

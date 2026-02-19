@@ -34,3 +34,5 @@ export {
   getCreateAssociatedTokenIdempotentInstructionWithAddress,
   NATIVE_MINT,
 } from "./wsol/instructions";
+
+export { getCreateEscrowV2InstructionAsync } from "./generated/instructions/createEscrowV2";
