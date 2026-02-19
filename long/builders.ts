@@ -17,6 +17,7 @@ import {
   type RemainingAccountInput,
 } from "../shared/remaining-accounts";
 import type { OptionType } from "../generated/types";
+import { getCreateAssociatedTokenIdempotentInstructionWithAddress } from "../wsol/instructions";
 
 export interface BuildBuyFromPoolParams {
   optionPool: AddressLike;
@@ -85,11 +86,28 @@ export async function buildBuyFromPoolInstruction(
   return appendRemainingAccounts(kitInstruction, params.remainingAccounts);
 }
 
+/**
+ * Builds a buy-from-pool transaction. The returned transaction may include a
+ * leading create-ATA-idempotent instruction for the buyer's option account so
+ * first-time buyers succeed without a separate setup step.
+ */
 export async function buildBuyFromPoolTransaction(
   params: BuildBuyFromPoolParams
 ): Promise<BuiltTransaction> {
-  const instruction = await buildBuyFromPoolInstruction(params);
-  return { instructions: [instruction] };
+  const buyerOptionAccountAddress = params.buyerOptionAccount
+    ? toAddress(params.buyerOptionAccount)
+    : await deriveAssociatedTokenAddress(params.buyer, params.longMint);
+
+  const createAtaIx =
+    await getCreateAssociatedTokenIdempotentInstructionWithAddress(
+      params.buyer,
+      params.buyer,
+      params.longMint,
+      buyerOptionAccountAddress
+    );
+
+  const buyFromPoolIx = await buildBuyFromPoolInstruction(params);
+  return { instructions: [createAtaIx, buyFromPoolIx] };
 }
 
 export interface BuildBuyFromPoolTransactionWithDerivationParams {
