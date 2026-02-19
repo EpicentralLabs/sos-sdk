@@ -242,11 +242,6 @@ export async function buildOptionMintTransactionWithDerivation(
     rpc: params.rpc,
   });
 
-  invariant(
-    !!resolved.escrowLongAccount && !!resolved.premiumVault && !!resolved.collateralVault,
-    "Option pool and collateral pool must exist; ensure rpc is provided and pools are initialized."
-  );
-
   const underlyingMint = resolved.underlyingMint ?? params.underlyingMint;
   const [makerLongAccount, makerShortAccount] = await Promise.all([
     deriveAssociatedTokenAddress(params.maker, resolved.longMint),
