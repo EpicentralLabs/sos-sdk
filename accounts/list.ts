@@ -27,6 +27,8 @@ import type { AddressLike, KitRpc } from "../client/types";
 
 const DISCRIMINATOR_OFFSET = 0n;
 const OWNER_OFFSET = 8n;
+/** WriterPosition layout: discriminator(8) + writer_authority(32) + option_pool(32). Used for getProgramAccounts memcmp. */
+const WRITER_POSITION_OPTION_POOL_OFFSET = 40n;
 const ACTIVE_POOL_LOAN_STATUS = 1;
 
 type ListedAccount<T> = {
@@ -68,13 +70,24 @@ function ownerFilter(owner: AddressLike) {
   } as const;
 }
 
+function optionPoolFilter(optionPool: AddressLike) {
+  return {
+    memcmp: {
+      offset: WRITER_POSITION_OPTION_POOL_OFFSET,
+      encoding: "base58",
+      bytes: toAddress(optionPool),
+    },
+  } as const;
+}
+
 async function fetchAndDecodeProgramAccounts<T>(
   rpc: KitRpc,
   decoder: { decode: (value: Uint8Array) => T },
-  filters: ReadonlyArray<unknown>
+  filters: ReadonlyArray<unknown>,
+  programAddress: AddressLike = PROGRAM_ID
 ): Promise<Array<ListedAccount<T>>> {
   const response = await rpc
-    .getProgramAccounts(PROGRAM_ID, {
+    .getProgramAccounts(toAddress(programAddress), {
       encoding: "base64",
       filters: filters as never,
     })
@@ -103,6 +116,27 @@ export async function fetchWriterPositionsByWriter(
     ownerFilter(writer),
     { dataSize: BigInt(getWriterPositionSize()) },
   ]);
+}
+
+/**
+ * Fetches all WriterPosition accounts for a single option pool.
+ * WriterPosition layout: option_pool at offset 40, 32 bytes (memcmp filter).
+ */
+export async function fetchWriterPositionsForPool(
+  rpc: KitRpc,
+  optionPool: AddressLike,
+  programId?: AddressLike
+): Promise<Array<ListedAccount<WriterPosition>>> {
+  return fetchAndDecodeProgramAccounts(
+    rpc,
+    getWriterPositionDecoder(),
+    [
+      discriminatorFilter(WRITER_POSITION_DISCRIMINATOR),
+      optionPoolFilter(optionPool),
+      { dataSize: BigInt(getWriterPositionSize()) },
+    ],
+    programId ?? PROGRAM_ID
+  );
 }
 
 export async function fetchPositionAccountsByBuyer(

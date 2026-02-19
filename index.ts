@@ -17,6 +17,9 @@ export * from "./shared/transactions";
 export * from "./long/builders";
 export * from "./long/exercise";
 export * from "./long/quotes";
+export {
+  getBuyFromPoolRemainingAccounts,
+} from "./long/remaining-accounts";
 
 export * from "./short/builders";
 export * from "./short/claim-theta";
