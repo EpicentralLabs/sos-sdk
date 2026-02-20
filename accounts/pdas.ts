@@ -258,6 +258,39 @@ export async function deriveEscrowAuthorityPda(
   });
 }
 
+/**
+ * Derives the PoolLoan PDA using the canonical seeds: vault, maker, nonce.
+ * Matches the program's derivation in omlp_context.rs (BorrowFromPool).
+ *
+ * @param vault - OMLP vault PDA (from deriveVaultPda)
+ * @param maker - Writer/borrower pubkey
+ * @param nonce - Loan nonce (u64)
+ * @param programId - Optional program ID
+ */
+export async function derivePoolLoanPdaFromVault(
+  vault: AddressLike,
+  maker: AddressLike,
+  nonce: bigint | number,
+  programId: AddressLike = PROGRAM_ID
+): Promise<readonly [Address, number]> {
+  const addressEncoder = getAddressEncoder();
+  return getProgramDerivedAddress({
+    programAddress: toAddress(programId),
+    seeds: [
+      new TextEncoder().encode("pool_loan"),
+      addressEncoder.encode(toAddress(vault)),
+      addressEncoder.encode(toAddress(maker)),
+      u64ToLeBytes(nonce),
+    ],
+  });
+}
+
+/**
+ * Derives the PoolLoan PDA using writer position and nonce.
+ *
+ * @deprecated This derivation does not match the program. Use {@link derivePoolLoanPdaFromVault}
+ * with (vault, maker, nonce) instead. Program seeds are: pool_loan, vault, maker, nonce (u64 le).
+ */
 export async function derivePoolLoanPda(
   writerPosition: AddressLike,
   nonce: bigint | number,

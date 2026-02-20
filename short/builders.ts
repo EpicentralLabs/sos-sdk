@@ -8,11 +8,14 @@ import {
 import type { Instruction } from "@solana/kit";
 import { toAddress } from "../client/program";
 import type { AddressLike, BuiltTransaction, KitRpc } from "../client/types";
+import { fetchVault } from "../accounts/fetchers";
+import { fetchPoolLoansByMaker } from "../accounts/list";
 import { resolveOptionAccounts } from "../accounts/resolve-option";
 import {
   deriveAssociatedTokenAddress,
   deriveMakerCollateralSharePda,
   deriveMetadataPda,
+  deriveVaultPda,
   deriveWriterPositionPda,
 } from "../accounts/pdas";
 import { assertNonNegativeAmount, assertPositiveAmount } from "../shared/amounts";
@@ -335,7 +338,88 @@ export interface BuildUnwindWriterUnsoldTransactionWithDerivationParams {
   programId?: AddressLike;
   omlpVault?: AddressLike;
   feeWallet?: AddressLike;
+  /**
+   * When repaying pool loans: [Vault PDA, PoolLoan₁, PoolLoan₂, ...] (all writable).
+   * Prefer {@link buildUnwindWriterUnsoldWithLoanRepayment} to build this automatically.
+   */
   remainingAccounts?: RemainingAccountInput[];
+}
+
+export interface BuildUnwindWriterUnsoldWithLoanRepaymentParams {
+  underlyingAsset: AddressLike;
+  optionType: OptionType;
+  strikePrice: number;
+  expirationDate: bigint | number;
+  writer: AddressLike;
+  unwindQty: bigint | number;
+  rpc: KitRpc;
+  programId?: AddressLike;
+  /** Override when pool fetch is not used; otherwise resolved from option pool. */
+  underlyingMint?: AddressLike;
+}
+
+/**
+ * Builds an unwind_writer_unsold transaction that also repays any active pool loans
+ * for the option's underlying vault. When a writer unwinds an unsold short that had
+ * borrowed from OMLP, borrowed funds are repaid to the pool (not sent to the writer).
+ *
+ * remaining_accounts order: [Vault PDA, PoolLoan₁, PoolLoan₂, ...] (all writable).
+ * If no active pool loans exist for this vault, still passes omlpVault and feeWallet
+ * so the API can be used for all unwinds.
+ */
+export async function buildUnwindWriterUnsoldWithLoanRepayment(
+  params: BuildUnwindWriterUnsoldWithLoanRepaymentParams
+): Promise<BuiltTransaction> {
+  const resolved = await resolveOptionAccounts({
+    underlyingAsset: params.underlyingAsset,
+    optionType: params.optionType,
+    strikePrice: params.strikePrice,
+    expirationDate: params.expirationDate,
+    programId: params.programId,
+    rpc: params.rpc,
+  });
+
+  const underlyingMint = params.underlyingMint ?? resolved.underlyingMint;
+  invariant(
+    !!underlyingMint,
+    "underlyingMint is required; ensure rpc is provided and option pool is initialized, or pass underlyingMint."
+  );
+
+  const [vaultPda] = await deriveVaultPda(underlyingMint, params.programId);
+  const vaultPdaStr = toAddress(vaultPda);
+
+  const [loans, vault] = await Promise.all([
+    fetchPoolLoansByMaker(params.rpc, params.writer),
+    fetchVault(params.rpc, vaultPda),
+  ]);
+
+  const vaultLoans = loans.filter(
+    (item) => toAddress(item.data.vault) === vaultPdaStr
+  );
+
+  const remainingAccounts: RemainingAccountInput[] = [
+    { address: vaultPda, isWritable: true },
+    ...vaultLoans.map((item) => ({ address: item.address, isWritable: true })),
+  ];
+
+  const omlpVault = await deriveAssociatedTokenAddress(vaultPda, underlyingMint);
+  const feeWallet = vault
+    ? await deriveAssociatedTokenAddress(vault.feeWallet, underlyingMint)
+    : undefined;
+
+  return buildUnwindWriterUnsoldTransactionWithDerivation({
+    underlyingAsset: params.underlyingAsset,
+    optionType: params.optionType,
+    strikePrice: params.strikePrice,
+    expirationDate: params.expirationDate,
+    writer: params.writer,
+    unwindQty: params.unwindQty,
+    rpc: params.rpc,
+    programId: params.programId,
+    omlpVault,
+    feeWallet,
+    remainingAccounts,
+  });
 }
 
 export async function buildUnwindWriterUnsoldTransactionWithDerivation(
