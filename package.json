@@ -13,7 +13,10 @@
   },
   "scripts": {
     "typecheck": "tsc --project tsconfig.json --noEmit",
-    "publish": "dotenv -e .env -- pnpm publish --access public"
+    "publish": "dotenv -e .env -- pnpm publish --access public",
+    "publish-beta": "dotenv -e .env -- pnpm publish --access public --tag beta",
+    "publish-alpha": "dotenv -e .env -- pnpm publish --access public --tag alpha",
+    "deprecate": "dotenv -e .env -- pnpm exec npm deprecate"
   },
   "devDependencies": {
     "dotenv-cli": "^8.0.0"
