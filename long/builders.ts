@@ -10,14 +10,16 @@ import {
   deriveAssociatedTokenAddress,
   deriveBuyerPositionPda,
 } from "../accounts/pdas";
-import { assertPositiveAmount } from "../shared/amounts";
+import { assertNonNegativeAmount, assertPositiveAmount } from "../shared/amounts";
 import { invariant } from "../shared/errors";
 import {
   appendRemainingAccounts,
   type RemainingAccountInput,
 } from "../shared/remaining-accounts";
 import type { OptionType } from "../generated/types";
-import { getCreateAssociatedTokenIdempotentInstructionWithAddress } from "../wsol/instructions";
+import { getCreateAssociatedTokenIdempotentInstructionWithAddress, NATIVE_MINT } from "../wsol/instructions";
+import { fetchOptionPool } from "../accounts/fetchers";
+import { getBuyFromPoolRemainingAccounts } from "./remaining-accounts";
 
 export interface BuildBuyFromPoolParams {
   optionPool: AddressLike;
@@ -127,6 +129,42 @@ export interface BuildBuyFromPoolTransactionWithDerivationParams {
   remainingAccounts?: RemainingAccountInput[];
 }
 
+const DEFAULT_MARKET_ORDER_SLIPPAGE_BUFFER_BASE_UNITS = 500_000n;
+
+interface MarketOrderBufferLikeParams {
+  slippageBufferBaseUnits?: bigint | number;
+  slippageBufferLamports?: bigint | number;
+}
+
+function normalizeMarketOrderSlippageBuffer(
+  params: MarketOrderBufferLikeParams,
+  underlyingMint: AddressLike
+): bigint {
+  const hasBaseUnits = params.slippageBufferBaseUnits !== undefined;
+  const hasLamports = params.slippageBufferLamports !== undefined;
+
+  invariant(
+    !(hasBaseUnits && hasLamports),
+    "Provide only one of slippageBufferBaseUnits or slippageBufferLamports."
+  );
+
+  if (hasBaseUnits) {
+    assertNonNegativeAmount(params.slippageBufferBaseUnits!, "slippageBufferBaseUnits");
+    return BigInt(params.slippageBufferBaseUnits!);
+  }
+
+  if (hasLamports) {
+    assertNonNegativeAmount(params.slippageBufferLamports!, "slippageBufferLamports");
+    invariant(
+      String(toAddress(underlyingMint)) === String(NATIVE_MINT),
+      "slippageBufferLamports is only supported for SOL/WSOL underlyings. Use slippageBufferBaseUnits for other assets."
+    );
+    return BigInt(params.slippageBufferLamports!);
+  }
+
+  return DEFAULT_MARKET_ORDER_SLIPPAGE_BUFFER_BASE_UNITS;
+}
+
 export async function buildBuyFromPoolTransactionWithDerivation(
   params: BuildBuyFromPoolTransactionWithDerivationParams
 ): Promise<BuiltTransaction> {
@@ -175,6 +213,82 @@ export async function buildBuyFromPoolTransactionWithDerivation(
     buyerPosition,
     buyerOptionAccount,
     remainingAccounts: params.remainingAccounts,
+  });
+}
+
+export interface BuildBuyFromPoolMarketOrderParams
+  extends Omit<
+      BuildBuyFromPoolTransactionWithDerivationParams,
+      "premiumAmount" | "remainingAccounts"
+    >,
+    MarketOrderBufferLikeParams {
+  quotedPremiumTotal: bigint | number;
+}
+
+/**
+ * High-level market-order buy builder.
+ * Refetches option pool and remaining writer-position accounts right before
+ * build and sets max premium = quotedPremiumTotal + slippage buffer.
+ */
+export async function buildBuyFromPoolMarketOrderTransactionWithDerivation(
+  params: BuildBuyFromPoolMarketOrderParams
+): Promise<BuiltTransaction> {
+  assertPositiveAmount(params.quantity, "quantity");
+  assertPositiveAmount(params.quotedPremiumTotal, "quotedPremiumTotal");
+
+  const resolved = await resolveOptionAccounts({
+    underlyingAsset: params.underlyingAsset,
+    optionType: params.optionType,
+    strikePrice: params.strikePrice,
+    expirationDate: params.expirationDate,
+    programId: params.programId,
+    rpc: params.rpc,
+  });
+
+  const [refetchedPool, remainingAccounts, buyerPosition, buyerOptionAccount] =
+    await Promise.all([
+      fetchOptionPool(params.rpc, resolved.optionPool),
+      getBuyFromPoolRemainingAccounts(params.rpc, resolved.optionPool, params.programId),
+      params.buyerPosition
+        ? Promise.resolve(params.buyerPosition)
+        : deriveBuyerPositionPda(
+            params.buyer,
+            resolved.optionAccount,
+            params.programId
+          ).then(([addr]) => addr),
+      params.buyerOptionAccount
+        ? Promise.resolve(params.buyerOptionAccount)
+        : deriveAssociatedTokenAddress(params.buyer, resolved.longMint),
+    ]);
+
+  invariant(
+    !!refetchedPool,
+    "Option pool must exist; ensure rpc is provided and pool is initialized."
+  );
+
+  const slippageBuffer = normalizeMarketOrderSlippageBuffer(
+    params,
+    refetchedPool.underlyingMint
+  );
+  const maxPremiumAmount = BigInt(params.quotedPremiumTotal) + slippageBuffer;
+  assertPositiveAmount(maxPremiumAmount, "maxPremiumAmount");
+
+  return buildBuyFromPoolTransaction({
+    optionPool: resolved.optionPool,
+    optionAccount: resolved.optionAccount,
+    longMint: resolved.longMint,
+    underlyingMint: refetchedPool.underlyingMint,
+    marketData: resolved.marketData,
+    priceUpdate: params.priceUpdate,
+    buyer: params.buyer,
+    buyerPaymentAccount: params.buyerPaymentAccount,
+    escrowLongAccount: refetchedPool.escrowLongAccount,
+    premiumVault: refetchedPool.premiumVault,
+    quantity: params.quantity,
+    premiumAmount: maxPremiumAmount,
+    buyerPosition,
+    buyerOptionAccount,
+    remainingAccounts,
   });
 }
 

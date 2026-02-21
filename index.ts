@@ -16,6 +16,7 @@ export * from "./shared/transactions";
 
 export * from "./long/builders";
 export * from "./long/exercise";
+export * from "./long/preflight";
 export * from "./long/quotes";
 export {
   getBuyFromPoolRemainingAccounts,

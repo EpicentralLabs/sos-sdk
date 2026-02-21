@@ -47,7 +47,9 @@ Additional modules:
 
 | Function | Description |
 |----------|-------------|
+| `buildBuyFromPoolMarketOrderTransactionWithDerivation` | High-level market-order buy builder (refetches pool + remaining accounts, applies premium cap buffer). |
 | `buildBuyFromPoolTransactionWithDerivation` | Builds buy-from-pool transaction; resolves accounts from option identity. |
+| `preflightBuyFromPoolMarketOrder` | Buy preflight helper for liquidity + remaining-account coverage checks. |
 | `buildCloseLongToPoolTransactionWithDerivation` | Builds close-long-to-pool transaction. |
 | `getBuyFromPoolRemainingAccounts` | Builds remaining_accounts for buy (writer positions, etc.). |
 
@@ -148,16 +150,31 @@ const tx = await buildUnwindWriterUnsoldWithLoanRepayment({
 
 ## Usage Examples
 
-### Buy from pool (with derivation)
+### Buy From Pool (market order, high-level)
 
 ```ts
 import {
-  buildBuyFromPoolTransactionWithDerivation,
-  resolveOptionAccounts,
+  buildBuyFromPoolMarketOrderTransactionWithDerivation,
+  preflightBuyFromPoolMarketOrder,
   OptionType,
 } from "@epicentral/sos-sdk";
 
-const tx = await buildBuyFromPoolTransactionWithDerivation({
+const preflight = await preflightBuyFromPoolMarketOrder({
+  underlyingAsset: "...",
+  optionType: OptionType.Call,
+  strikePrice: 100_000,
+  expirationDate: BigInt(1735689600),
+  quantity: 1_000_000,
+  rpc,
+  quotedPremiumTotal: 50_000,
+  slippageBufferBaseUnits: 500_000n,
+});
+
+if (!preflight.canBuy) {
+  throw new Error(preflight.reason ?? "Buy preflight failed");
+}
+
+const tx = await buildBuyFromPoolMarketOrderTransactionWithDerivation({
   underlyingAsset: "...",
   optionType: OptionType.Call,
   strikePrice: 100_000,
@@ -166,10 +183,29 @@ const tx = await buildBuyFromPoolTransactionWithDerivation({
   buyerPaymentAccount: buyerUsdcAta,
   priceUpdate: pythPriceFeed,
   quantity: 1_000_000,
-  premiumAmount: 50_000,
+  quotedPremiumTotal: 50_000,
+  slippageBufferBaseUnits: 500_000n,
   rpc,
 });
 ```
+
+### Buy premium semantics (market orders)
+
+- `premiumAmount` / `max_premium_amount` is a **max premium cap**, not an exact premium target.
+- Program computes premium on-chain at execution time and fails with `SlippageToleranceExceeded` if computed premium exceeds the cap.
+- High-level market builder computes cap as `quotedPremiumTotal + buffer`:
+  - Canonical: `slippageBufferBaseUnits`
+  - Convenience for SOL/WSOL: `slippageBufferLamports`
+  - Default buffer: `500_000` base units (0.0005 SOL lamports)
+
+### Buy liquidity errors (6041)
+
+- `InsufficientPoolLiquidity` can happen when:
+  - `option_pool.total_available < quantity`, or
+  - remaining writer-position accounts cannot cover full quantity in the smallest-first fill loop.
+- Recommended client flow:
+  1. Run `preflightBuyFromPoolMarketOrder` for UX gating.
+  2. Build via `buildBuyFromPoolMarketOrderTransactionWithDerivation` so pool + remaining accounts are refetched immediately before build.
 
 ### Unwind with loan repayment
 
