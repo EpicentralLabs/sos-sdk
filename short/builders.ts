@@ -62,6 +62,9 @@ export interface BuildOptionMintParams {
   remainingAccounts?: RemainingAccountInput[];
 }
 
+/** Max PoolLoans per unwind to stay under 64-account tx limit (~18 named + ~20 loans) */
+const MAX_POOL_LOANS_PER_UNWIND = 20;
+
 export interface BuildUnwindWriterUnsoldParams {
   optionPool: AddressLike;
   optionAccount: AddressLike;
@@ -75,6 +78,7 @@ export interface BuildUnwindWriterUnsoldParams {
   unwindQty: bigint | number;
   collateralPool?: AddressLike;
   writerPosition?: AddressLike;
+  omlpVaultState?: AddressLike;
   omlpVault?: AddressLike;
   feeWallet?: AddressLike;
   remainingAccounts?: RemainingAccountInput[];
@@ -311,6 +315,7 @@ export async function buildUnwindWriterUnsoldInstruction(
     writerShortAccount: toAddress(params.writerShortAccount),
     collateralVault: toAddress(params.collateralVault),
     writerCollateralAccount: toAddress(params.writerCollateralAccount),
+    omlpVaultState: params.omlpVaultState ? toAddress(params.omlpVaultState) : undefined,
     omlpVault: params.omlpVault ? toAddress(params.omlpVault) : undefined,
     feeWallet: params.feeWallet ? toAddress(params.feeWallet) : undefined,
     writer: toAddress(params.writer) as any,
@@ -336,10 +341,12 @@ export interface BuildUnwindWriterUnsoldTransactionWithDerivationParams {
   unwindQty: bigint | number;
   rpc: KitRpc;
   programId?: AddressLike;
+  omlpVaultState?: AddressLike;
   omlpVault?: AddressLike;
   feeWallet?: AddressLike;
   /**
-   * When repaying pool loans: [Vault PDA, PoolLoan₁, PoolLoan₂, ...] (all writable).
+   * When repaying pool loans: [PoolLoan₁, PoolLoan₂, ...] (all writable).
+   * omlpVaultState, omlpVault, feeWallet must also be passed.
    * Prefer {@link buildUnwindWriterUnsoldWithLoanRepayment} to build this automatically.
    */
   remainingAccounts?: RemainingAccountInput[];
@@ -361,11 +368,12 @@ export interface BuildUnwindWriterUnsoldWithLoanRepaymentParams {
 /**
  * Builds an unwind_writer_unsold transaction that also repays any active pool loans
  * for the option's underlying vault. When a writer unwinds an unsold short that had
- * borrowed from OMLP, borrowed funds are repaid to the pool (not sent to the writer).
+ * borrowed from OMLP, the program repays lenders from the collateral vault (burn,
+ * repay, then return collateral to writer) in one instruction.
  *
- * remaining_accounts order: [Vault PDA, PoolLoan₁, PoolLoan₂, ...] (all writable).
- * If no active pool loans exist for this vault, still passes omlpVault and feeWallet
- * so the API can be used for all unwinds.
+ * Passes omlpVaultState (Vault PDA), omlpVault, feeWallet as named accounts.
+ * remaining_accounts: [PoolLoan₁, PoolLoan₂, ...] only (capped at 20).
+ * If no active pool loans exist, still passes vault accounts so the API works for all unwinds.
  */
 export async function buildUnwindWriterUnsoldWithLoanRepayment(
   params: BuildUnwindWriterUnsoldWithLoanRepaymentParams
@@ -393,14 +401,14 @@ export async function buildUnwindWriterUnsoldWithLoanRepayment(
     fetchVault(params.rpc, vaultPda),
   ]);
 
-  const vaultLoans = loans.filter(
-    (item) => toAddress(item.data.vault) === vaultPdaStr
-  );
+  const vaultLoans = loans
+    .filter((item) => toAddress(item.data.vault) === vaultPdaStr)
+    .slice(0, MAX_POOL_LOANS_PER_UNWIND);
 
-  const remainingAccounts: RemainingAccountInput[] = [
-    { address: vaultPda, isWritable: true },
-    ...vaultLoans.map((item) => ({ address: item.address, isWritable: true })),
-  ];
+  const remainingAccounts: RemainingAccountInput[] = vaultLoans.map((item) => ({
+    address: item.address,
+    isWritable: true,
+  }));
 
   const omlpVault = await deriveAssociatedTokenAddress(vaultPda, underlyingMint);
   const feeWallet = vault
@@ -416,6 +424,7 @@ export async function buildUnwindWriterUnsoldWithLoanRepayment(
     unwindQty: params.unwindQty,
     rpc: params.rpc,
     programId: params.programId,
+    omlpVaultState: vaultPda,
     omlpVault,
     feeWallet,
     remainingAccounts,
@@ -459,6 +468,7 @@ export async function buildUnwindWriterUnsoldTransactionWithDerivation(
     unwindQty: params.unwindQty,
     collateralPool: resolved.collateralPool,
     writerPosition: writerPosition[0],
+    omlpVaultState: params.omlpVaultState,
     omlpVault: params.omlpVault,
     feeWallet: params.feeWallet,
     remainingAccounts: params.remainingAccounts,

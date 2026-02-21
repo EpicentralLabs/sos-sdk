@@ -41,6 +41,7 @@ import {
   parseOptionMintInstruction,
   parseOptionValidateInstruction,
   parseRepayPoolLoanFromCollateralInstruction,
+  parseRepayPoolLoanFromWalletInstruction,
   parseRepayPoolLoanInstruction,
   parseSettleMakerCollateralInstruction,
   parseSyncWriterPositionInstruction,
@@ -74,6 +75,7 @@ import {
   type ParsedOptionMintInstruction,
   type ParsedOptionValidateInstruction,
   type ParsedRepayPoolLoanFromCollateralInstruction,
+  type ParsedRepayPoolLoanFromWalletInstruction,
   type ParsedRepayPoolLoanInstruction,
   type ParsedSettleMakerCollateralInstruction,
   type ParsedSyncWriterPositionInstruction,
@@ -282,6 +284,7 @@ export enum OptionProgramInstruction {
   OptionValidate,
   RepayPoolLoan,
   RepayPoolLoanFromCollateral,
+  RepayPoolLoanFromWallet,
   SettleMakerCollateral,
   SyncWriterPosition,
   TransferAdmin,
@@ -575,6 +578,17 @@ export function identifyOptionProgramInstruction(
     containsBytes(
       data,
       fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([78, 130, 135, 90, 211, 21, 247, 247]),
+      ),
+      0,
+    )
+  ) {
+    return OptionProgramInstruction.RepayPoolLoanFromWallet;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
         new Uint8Array([47, 169, 97, 199, 29, 197, 115, 148]),
       ),
       0,
@@ -742,6 +756,9 @@ export type ParsedOptionProgramInstruction<
   | ({
       instructionType: OptionProgramInstruction.RepayPoolLoanFromCollateral;
     } & ParsedRepayPoolLoanFromCollateralInstruction<TProgram>)
+  | ({
+      instructionType: OptionProgramInstruction.RepayPoolLoanFromWallet;
+    } & ParsedRepayPoolLoanFromWalletInstruction<TProgram>)
   | ({
       instructionType: OptionProgramInstruction.SettleMakerCollateral;
     } & ParsedSettleMakerCollateralInstruction<TProgram>)
@@ -945,6 +962,13 @@ export function parseOptionProgramInstruction<TProgram extends string>(
       return {
         instructionType: OptionProgramInstruction.RepayPoolLoanFromCollateral,
         ...parseRepayPoolLoanFromCollateralInstruction(instruction),
+      };
+    }
+    case OptionProgramInstruction.RepayPoolLoanFromWallet: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: OptionProgramInstruction.RepayPoolLoanFromWallet,
+        ...parseRepayPoolLoanFromWalletInstruction(instruction),
       };
     }
     case OptionProgramInstruction.SettleMakerCollateral: {

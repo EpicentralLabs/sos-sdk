@@ -63,6 +63,7 @@ export type UnwindWriterUnsoldInstruction<
   TAccountWriterShortAccount extends string | AccountMeta<string> = string,
   TAccountCollateralVault extends string | AccountMeta<string> = string,
   TAccountWriterCollateralAccount extends string | AccountMeta<string> = string,
+  TAccountOmlpVaultState extends string | AccountMeta<string> = string,
   TAccountOmlpVault extends string | AccountMeta<string> = string,
   TAccountFeeWallet extends string | AccountMeta<string> = string,
   TAccountWriter extends string | AccountMeta<string> = string,
@@ -105,6 +106,9 @@ export type UnwindWriterUnsoldInstruction<
       TAccountWriterCollateralAccount extends string
         ? WritableAccount<TAccountWriterCollateralAccount>
         : TAccountWriterCollateralAccount,
+      TAccountOmlpVaultState extends string
+        ? WritableAccount<TAccountOmlpVaultState>
+        : TAccountOmlpVaultState,
       TAccountOmlpVault extends string
         ? WritableAccount<TAccountOmlpVault>
         : TAccountOmlpVault,
@@ -175,6 +179,7 @@ export type UnwindWriterUnsoldAsyncInput<
   TAccountWriterShortAccount extends string = string,
   TAccountCollateralVault extends string = string,
   TAccountWriterCollateralAccount extends string = string,
+  TAccountOmlpVaultState extends string = string,
   TAccountOmlpVault extends string = string,
   TAccountFeeWallet extends string = string,
   TAccountWriter extends string = string,
@@ -201,6 +206,8 @@ export type UnwindWriterUnsoldAsyncInput<
   collateralVault: Address<TAccountCollateralVault>;
   /** Writer's underlying token account (receives returned collateral) */
   writerCollateralAccount: Address<TAccountWriterCollateralAccount>;
+  /** OMLP Vault state PDA (for total_loans, add_interest_to_index) - optional, required when repaying loans */
+  omlpVaultState?: Address<TAccountOmlpVaultState>;
   /** OMLP vault token account (receives loan repayments) - optional */
   omlpVault?: Address<TAccountOmlpVault>;
   /** Protocol fee wallet (receives protocol fees) - optional */
@@ -222,6 +229,7 @@ export async function getUnwindWriterUnsoldInstructionAsync<
   TAccountWriterShortAccount extends string,
   TAccountCollateralVault extends string,
   TAccountWriterCollateralAccount extends string,
+  TAccountOmlpVaultState extends string,
   TAccountOmlpVault extends string,
   TAccountFeeWallet extends string,
   TAccountWriter extends string,
@@ -240,6 +248,7 @@ export async function getUnwindWriterUnsoldInstructionAsync<
     TAccountWriterShortAccount,
     TAccountCollateralVault,
     TAccountWriterCollateralAccount,
+    TAccountOmlpVaultState,
     TAccountOmlpVault,
     TAccountFeeWallet,
     TAccountWriter,
@@ -260,6 +269,7 @@ export async function getUnwindWriterUnsoldInstructionAsync<
     TAccountWriterShortAccount,
     TAccountCollateralVault,
     TAccountWriterCollateralAccount,
+    TAccountOmlpVaultState,
     TAccountOmlpVault,
     TAccountFeeWallet,
     TAccountWriter,
@@ -292,6 +302,7 @@ export async function getUnwindWriterUnsoldInstructionAsync<
       value: input.writerCollateralAccount ?? null,
       isWritable: true,
     },
+    omlpVaultState: { value: input.omlpVaultState ?? null, isWritable: true },
     omlpVault: { value: input.omlpVault ?? null, isWritable: true },
     feeWallet: { value: input.feeWallet ?? null, isWritable: true },
     writer: { value: input.writer ?? null, isWritable: true },
@@ -358,6 +369,7 @@ export async function getUnwindWriterUnsoldInstructionAsync<
       getAccountMeta(accounts.writerShortAccount),
       getAccountMeta(accounts.collateralVault),
       getAccountMeta(accounts.writerCollateralAccount),
+      getAccountMeta(accounts.omlpVaultState),
       getAccountMeta(accounts.omlpVault),
       getAccountMeta(accounts.feeWallet),
       getAccountMeta(accounts.writer),
@@ -380,6 +392,7 @@ export async function getUnwindWriterUnsoldInstructionAsync<
     TAccountWriterShortAccount,
     TAccountCollateralVault,
     TAccountWriterCollateralAccount,
+    TAccountOmlpVaultState,
     TAccountOmlpVault,
     TAccountFeeWallet,
     TAccountWriter,
@@ -399,6 +412,7 @@ export type UnwindWriterUnsoldInput<
   TAccountWriterShortAccount extends string = string,
   TAccountCollateralVault extends string = string,
   TAccountWriterCollateralAccount extends string = string,
+  TAccountOmlpVaultState extends string = string,
   TAccountOmlpVault extends string = string,
   TAccountFeeWallet extends string = string,
   TAccountWriter extends string = string,
@@ -425,6 +439,8 @@ export type UnwindWriterUnsoldInput<
   collateralVault: Address<TAccountCollateralVault>;
   /** Writer's underlying token account (receives returned collateral) */
   writerCollateralAccount: Address<TAccountWriterCollateralAccount>;
+  /** OMLP Vault state PDA (for total_loans, add_interest_to_index) - optional, required when repaying loans */
+  omlpVaultState?: Address<TAccountOmlpVaultState>;
   /** OMLP vault token account (receives loan repayments) - optional */
   omlpVault?: Address<TAccountOmlpVault>;
   /** Protocol fee wallet (receives protocol fees) - optional */
@@ -446,6 +462,7 @@ export function getUnwindWriterUnsoldInstruction<
   TAccountWriterShortAccount extends string,
   TAccountCollateralVault extends string,
   TAccountWriterCollateralAccount extends string,
+  TAccountOmlpVaultState extends string,
   TAccountOmlpVault extends string,
   TAccountFeeWallet extends string,
   TAccountWriter extends string,
@@ -464,6 +481,7 @@ export function getUnwindWriterUnsoldInstruction<
     TAccountWriterShortAccount,
     TAccountCollateralVault,
     TAccountWriterCollateralAccount,
+    TAccountOmlpVaultState,
     TAccountOmlpVault,
     TAccountFeeWallet,
     TAccountWriter,
@@ -483,6 +501,7 @@ export function getUnwindWriterUnsoldInstruction<
   TAccountWriterShortAccount,
   TAccountCollateralVault,
   TAccountWriterCollateralAccount,
+  TAccountOmlpVaultState,
   TAccountOmlpVault,
   TAccountFeeWallet,
   TAccountWriter,
@@ -514,6 +533,7 @@ export function getUnwindWriterUnsoldInstruction<
       value: input.writerCollateralAccount ?? null,
       isWritable: true,
     },
+    omlpVaultState: { value: input.omlpVaultState ?? null, isWritable: true },
     omlpVault: { value: input.omlpVault ?? null, isWritable: true },
     feeWallet: { value: input.feeWallet ?? null, isWritable: true },
     writer: { value: input.writer ?? null, isWritable: true },
@@ -551,6 +571,7 @@ export function getUnwindWriterUnsoldInstruction<
       getAccountMeta(accounts.writerShortAccount),
       getAccountMeta(accounts.collateralVault),
       getAccountMeta(accounts.writerCollateralAccount),
+      getAccountMeta(accounts.omlpVaultState),
       getAccountMeta(accounts.omlpVault),
       getAccountMeta(accounts.feeWallet),
       getAccountMeta(accounts.writer),
@@ -573,6 +594,7 @@ export function getUnwindWriterUnsoldInstruction<
     TAccountWriterShortAccount,
     TAccountCollateralVault,
     TAccountWriterCollateralAccount,
+    TAccountOmlpVaultState,
     TAccountOmlpVault,
     TAccountFeeWallet,
     TAccountWriter,
@@ -607,13 +629,15 @@ export type ParsedUnwindWriterUnsoldInstruction<
     collateralVault: TAccountMetas[8];
     /** Writer's underlying token account (receives returned collateral) */
     writerCollateralAccount: TAccountMetas[9];
+    /** OMLP Vault state PDA (for total_loans, add_interest_to_index) - optional, required when repaying loans */
+    omlpVaultState?: TAccountMetas[10] | undefined;
     /** OMLP vault token account (receives loan repayments) - optional */
-    omlpVault?: TAccountMetas[10] | undefined;
+    omlpVault?: TAccountMetas[11] | undefined;
     /** Protocol fee wallet (receives protocol fees) - optional */
-    feeWallet?: TAccountMetas[11] | undefined;
-    writer: TAccountMetas[12];
-    tokenProgram: TAccountMetas[13];
-    systemProgram: TAccountMetas[14];
+    feeWallet?: TAccountMetas[12] | undefined;
+    writer: TAccountMetas[13];
+    tokenProgram: TAccountMetas[14];
+    systemProgram: TAccountMetas[15];
   };
   data: UnwindWriterUnsoldInstructionData;
 };
@@ -626,7 +650,7 @@ export function parseUnwindWriterUnsoldInstruction<
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedUnwindWriterUnsoldInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 15) {
+  if (instruction.accounts.length < 16) {
     // TODO: Coded error.
     throw new Error("Not enough accounts");
   }
@@ -655,6 +679,7 @@ export function parseUnwindWriterUnsoldInstruction<
       writerShortAccount: getNextAccount(),
       collateralVault: getNextAccount(),
       writerCollateralAccount: getNextAccount(),
+      omlpVaultState: getNextOptionalAccount(),
       omlpVault: getNextOptionalAccount(),
       feeWallet: getNextOptionalAccount(),
       writer: getNextAccount(),

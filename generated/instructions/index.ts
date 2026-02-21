@@ -31,6 +31,7 @@ export * from "./optionMint";
 export * from "./optionValidate";
 export * from "./repayPoolLoan";
 export * from "./repayPoolLoanFromCollateral";
+export * from "./repayPoolLoanFromWallet";
 export * from "./settleMakerCollateral";
 export * from "./syncWriterPosition";
 export * from "./transferAdmin";

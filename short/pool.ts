@@ -2,6 +2,7 @@ import {
   getBorrowFromPoolInstructionAsync,
   getRepayPoolLoanInstructionAsync,
   getRepayPoolLoanFromCollateralInstructionAsync,
+  getRepayPoolLoanFromWalletInstructionAsync,
 } from "../generated/instructions";
 import type { Instruction } from "@solana/kit";
 import { toAddress } from "../client/program";
@@ -111,6 +112,39 @@ export async function buildRepayPoolLoanTransaction(
   params: BuildRepayPoolLoanParams
 ): Promise<BuiltTransaction> {
   const instruction = await buildRepayPoolLoanInstruction(params);
+  return { instructions: [instruction] };
+}
+
+/**
+ * Repay a pool loan entirely from maker's wallet (no escrow used).
+ * Use when standard repay fails with InsufficientEscrowBalance (stuck loan).
+ */
+export async function buildRepayPoolLoanFromWalletInstruction(
+  params: BuildRepayPoolLoanParams
+): Promise<Instruction<string>> {
+  return getRepayPoolLoanFromWalletInstructionAsync({
+    poolLoan: toAddress(params.poolLoan),
+    vault: toAddress(params.vault),
+    vaultTokenAccount: toAddress(params.vaultTokenAccount),
+    escrowState: toAddress(params.escrowState),
+    escrowAuthority: params.escrowAuthority
+      ? toAddress(params.escrowAuthority)
+      : undefined,
+    escrowTokenAccount: toAddress(params.escrowTokenAccount),
+    makerTokenAccount: toAddress(params.makerTokenAccount),
+    feeWalletTokenAccount: toAddress(params.feeWalletTokenAccount),
+    maker: toAddress(params.maker) as any,
+    tokenProgram: params.tokenProgram ? toAddress(params.tokenProgram) : undefined,
+  });
+}
+
+/**
+ * Builds the repay-from-wallet transaction (stuck loan recovery).
+ */
+export async function buildRepayPoolLoanFromWalletTransaction(
+  params: BuildRepayPoolLoanParams
+): Promise<BuiltTransaction> {
+  const instruction = await buildRepayPoolLoanFromWalletInstruction(params);
   return { instructions: [instruction] };
 }
 

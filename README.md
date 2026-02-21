@@ -64,6 +64,7 @@ Additional modules:
 | `buildClaimThetaTransaction` | Claims theta (time-decay share) for writer. |
 | `buildRepayPoolLoanFromCollateralInstruction` | Repays pool loan from collateral (short/pool). |
 | `buildRepayPoolLoanInstruction` | Repays pool loan with external funds (short/pool). |
+| `buildRepayPoolLoanFromWalletInstruction` | Repays pool loan from maker's wallet (stuck loan recovery). |
 
 ### OMLP (Lending)
 
@@ -87,18 +88,20 @@ Borrow/repay for writers: use `buildOptionMintTransactionWithDerivation` (with v
 
 ## Unwind with Loan Repayment
 
-When a writer unwinds an unsold short that had borrowed from the OMLP pool, the borrowed amount must be repaid to the pool, not sent to the writer.
+When a writer unwinds an unsold short that had borrowed from the OMLP pool, the program repays lenders from the collateral vault inside `unwind_writer_unsold` (burn LONG+SHORT, repay loans, then return collateral to writer) in one instruction.
 
 Use **`buildUnwindWriterUnsoldWithLoanRepayment`** so that:
 
 1. Active pool loans for the option’s underlying vault are fetched.
-2. `remaining_accounts` are built in the correct order: **[Vault PDA, PoolLoan₁, PoolLoan₂, ...]** (all writable).
-3. OMLP vault token account and fee wallet are resolved.
-4. One transaction both unwinds and repays the pool loan(s).
+2. `omlpVaultState` (Vault PDA), `omlpVault`, and `feeWallet` are passed as named accounts.
+3. `remaining_accounts` = **[PoolLoan₁, PoolLoan₂, ...]** only (capped at 20 loans per tx).
+4. One transaction burns, repays lenders from collateral vault, and returns collateral to the writer.
 
 If there are no active pool loans for that vault, the API still works and passes empty `remaining_accounts`.
 
-**Alternative (repay then unwind):** For flexibility, you can (1) build `repay_pool_loan_from_collateral` instructions via `buildRepayPoolLoanFromCollateralInstruction`, then (2) build `unwind_writer_unsold` without remaining_accounts.
+**Alternative (repay then unwind):** For writers with more than ~20 active loans, (1) build `repay_pool_loan_from_collateral` instructions first to reduce loans, then (2) unwind with the remaining loans.
+
+**Stuck loan (InsufficientEscrowBalance):** When standard repay fails with `InsufficientEscrowBalance` (escrow underfunded or drained), use `buildRepayPoolLoanFromWalletInstruction` or `buildRepayPoolLoanFromWalletTransaction`. Same accounts as `buildRepayPoolLoanInstruction`; maker pays full principal + interest + fees from their wallet.
 
 ## Usage Examples
 
