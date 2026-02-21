@@ -184,6 +184,12 @@ export const OPTION_PROGRAM_ERROR__INVALID_ESCROW_MINT = 0x17c2; // 6082
 export const OPTION_PROGRAM_ERROR__ACCOUNT_FROZEN = 0x17c3; // 6083
 /** InvalidAccount: Invalid account - does not match expected account */
 export const OPTION_PROGRAM_ERROR__INVALID_ACCOUNT = 0x17c4; // 6084
+/** UnwindRepayAccountsMissing: Unwind repayment accounts are required when active pool loans exist */
+export const OPTION_PROGRAM_ERROR__UNWIND_REPAY_ACCOUNTS_MISSING = 0x17c5; // 6085
+/** UnwindRepayWalletSourceMissing: Writer repayment account is required for unwind shortfall fallback */
+export const OPTION_PROGRAM_ERROR__UNWIND_REPAY_WALLET_SOURCE_MISSING = 0x17c6; // 6086
+/** UnwindRepayInsufficientTotalFunds: Insufficient total funds to fully repay unwind loans (principal + interest + protocol fees) */
+export const OPTION_PROGRAM_ERROR__UNWIND_REPAY_INSUFFICIENT_TOTAL_FUNDS = 0x17c7; // 6087
 
 export type OptionProgramError =
   | typeof OPTION_PROGRAM_ERROR__ACCOUNT_FROZEN
@@ -270,6 +276,9 @@ export type OptionProgramError =
   | typeof OPTION_PROGRAM_ERROR__UNAUTHORIZED_OMLP
   | typeof OPTION_PROGRAM_ERROR__UNDERLYING_ASSET_MISMATCH
   | typeof OPTION_PROGRAM_ERROR__UNHEALTHY_POSITION
+  | typeof OPTION_PROGRAM_ERROR__UNWIND_REPAY_ACCOUNTS_MISSING
+  | typeof OPTION_PROGRAM_ERROR__UNWIND_REPAY_INSUFFICIENT_TOTAL_FUNDS
+  | typeof OPTION_PROGRAM_ERROR__UNWIND_REPAY_WALLET_SOURCE_MISSING
   | typeof OPTION_PROGRAM_ERROR__VALIDATION_REQUIRED;
 
 let optionProgramErrorMessages: Record<OptionProgramError, string> | undefined;
@@ -359,6 +368,9 @@ if (process.env.NODE_ENV !== "production") {
     [OPTION_PROGRAM_ERROR__UNAUTHORIZED_OMLP]: `Unauthorized to perform this OMLP action`,
     [OPTION_PROGRAM_ERROR__UNDERLYING_ASSET_MISMATCH]: `Underlying asset mismatch - market data or mint does not match option`,
     [OPTION_PROGRAM_ERROR__UNHEALTHY_POSITION]: `Health ratio below liquidation threshold`,
+    [OPTION_PROGRAM_ERROR__UNWIND_REPAY_ACCOUNTS_MISSING]: `Unwind repayment accounts are required when active pool loans exist`,
+    [OPTION_PROGRAM_ERROR__UNWIND_REPAY_INSUFFICIENT_TOTAL_FUNDS]: `Insufficient total funds to fully repay unwind loans (principal + interest + protocol fees)`,
+    [OPTION_PROGRAM_ERROR__UNWIND_REPAY_WALLET_SOURCE_MISSING]: `Writer repayment account is required for unwind shortfall fallback`,
     [OPTION_PROGRAM_ERROR__VALIDATION_REQUIRED]: `Must call option_validate before borrow/settlement`,
   };
 }

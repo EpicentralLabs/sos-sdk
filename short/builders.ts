@@ -5,7 +5,7 @@ import {
   getUnwindWriterUnsoldInstructionAsync,
   type OptionType,
 } from "../generated";
-import type { Instruction } from "@solana/kit";
+import type { Instruction, TransactionSigner } from "@solana/kit";
 import { toAddress } from "../client/program";
 import type { AddressLike, BuiltTransaction, KitRpc } from "../client/types";
 import { fetchVault } from "../accounts/fetchers";
@@ -24,7 +24,12 @@ import {
   appendRemainingAccounts,
   type RemainingAccountInput,
 } from "../shared/remaining-accounts";
-import { getCreateAssociatedTokenIdempotentInstructionWithAddress } from "../wsol/instructions";
+import {
+  NATIVE_MINT,
+  getCreateAssociatedTokenIdempotentInstructionWithAddress,
+  getWrapSOLInstructions,
+} from "../wsol/instructions";
+import { preflightUnwindWriterUnsold } from "./preflight";
 
 export interface BuildOptionMintParams {
   optionType: OptionType;
@@ -81,6 +86,7 @@ export interface BuildUnwindWriterUnsoldParams {
   omlpVaultState?: AddressLike;
   omlpVault?: AddressLike;
   feeWallet?: AddressLike;
+  writerRepaymentAccount?: AddressLike;
   remainingAccounts?: RemainingAccountInput[];
 }
 
@@ -304,23 +310,28 @@ export async function buildUnwindWriterUnsoldInstruction(
 ): Promise<Instruction<string>> {
   assertPositiveAmount(params.unwindQty, "unwindQty");
 
-  const kitInstruction = await getUnwindWriterUnsoldInstructionAsync({
-    optionPool: toAddress(params.optionPool),
-    optionAccount: toAddress(params.optionAccount),
-    collateralPool: params.collateralPool ? toAddress(params.collateralPool) : undefined,
-    writerPosition: params.writerPosition ? toAddress(params.writerPosition) : undefined,
-    longMint: toAddress(params.longMint),
-    shortMint: toAddress(params.shortMint),
-    escrowLongAccount: toAddress(params.escrowLongAccount),
-    writerShortAccount: toAddress(params.writerShortAccount),
-    collateralVault: toAddress(params.collateralVault),
-    writerCollateralAccount: toAddress(params.writerCollateralAccount),
-    omlpVaultState: params.omlpVaultState ? toAddress(params.omlpVaultState) : undefined,
-    omlpVault: params.omlpVault ? toAddress(params.omlpVault) : undefined,
-    feeWallet: params.feeWallet ? toAddress(params.feeWallet) : undefined,
-    writer: toAddress(params.writer) as any,
-    unwindQty: params.unwindQty,
-  });
+  const kitInstruction = await getUnwindWriterUnsoldInstructionAsync(
+    {
+      optionPool: toAddress(params.optionPool),
+      optionAccount: toAddress(params.optionAccount),
+      collateralPool: params.collateralPool ? toAddress(params.collateralPool) : undefined,
+      writerPosition: params.writerPosition ? toAddress(params.writerPosition) : undefined,
+      longMint: toAddress(params.longMint),
+      shortMint: toAddress(params.shortMint),
+      escrowLongAccount: toAddress(params.escrowLongAccount),
+      writerShortAccount: toAddress(params.writerShortAccount),
+      collateralVault: toAddress(params.collateralVault),
+      writerCollateralAccount: toAddress(params.writerCollateralAccount),
+      omlpVaultState: params.omlpVaultState ? toAddress(params.omlpVaultState) : undefined,
+      omlpVault: params.omlpVault ? toAddress(params.omlpVault) : undefined,
+      feeWallet: params.feeWallet ? toAddress(params.feeWallet) : undefined,
+      writerRepaymentAccount: params.writerRepaymentAccount
+        ? toAddress(params.writerRepaymentAccount)
+        : undefined,
+      writer: toAddress(params.writer) as any,
+      unwindQty: params.unwindQty,
+    } as any
+  );
 
   return appendRemainingAccounts(kitInstruction, params.remainingAccounts);
 }
@@ -344,6 +355,7 @@ export interface BuildUnwindWriterUnsoldTransactionWithDerivationParams {
   omlpVaultState?: AddressLike;
   omlpVault?: AddressLike;
   feeWallet?: AddressLike;
+  writerRepaymentAccount?: AddressLike;
   /**
    * When repaying pool loans: [PoolLoan₁, PoolLoan₂, ...] (all writable).
    * omlpVaultState, omlpVault, feeWallet must also be passed.
@@ -363,6 +375,15 @@ export interface BuildUnwindWriterUnsoldWithLoanRepaymentParams {
   programId?: AddressLike;
   /** Override when pool fetch is not used; otherwise resolved from option pool. */
   underlyingMint?: AddressLike;
+  /** Optional explicit fallback source account. Defaults to writer ATA for underlying mint. */
+  writerRepaymentAccount?: AddressLike;
+  /**
+   * When true and underlying mint is WSOL, prepend wrap instructions for the
+   * detected wallet shortfall before unwind.
+   */
+  includeWrapForShortfall?: boolean;
+  /** Signer required when includeWrapForShortfall=true for WSOL paths. */
+  writerSigner?: TransactionSigner<string>;
 }
 
 /**
@@ -414,8 +435,27 @@ export async function buildUnwindWriterUnsoldWithLoanRepayment(
   const feeWallet = vault
     ? await deriveAssociatedTokenAddress(vault.feeWallet, underlyingMint)
     : undefined;
+  const writerRepaymentAccount =
+    params.writerRepaymentAccount ??
+    (await deriveAssociatedTokenAddress(params.writer, underlyingMint));
 
-  return buildUnwindWriterUnsoldTransactionWithDerivation({
+  const preflight = await preflightUnwindWriterUnsold({
+    underlyingAsset: params.underlyingAsset,
+    optionType: params.optionType,
+    strikePrice: params.strikePrice,
+    expirationDate: params.expirationDate,
+    writer: params.writer,
+    unwindQty: params.unwindQty,
+    rpc: params.rpc,
+    programId: params.programId,
+    underlyingMint,
+  });
+  invariant(
+    preflight.canRepayFully,
+    `Unwind cannot fully repay loans: shortfall=${preflight.summary.shortfall}`
+  );
+
+  const unwindTx = await buildUnwindWriterUnsoldTransactionWithDerivation({
     underlyingAsset: params.underlyingAsset,
     optionType: params.optionType,
     strikePrice: params.strikePrice,
@@ -427,8 +467,30 @@ export async function buildUnwindWriterUnsoldWithLoanRepayment(
     omlpVaultState: vaultPda,
     omlpVault,
     feeWallet,
+    writerRepaymentAccount,
     remainingAccounts,
   });
+
+  if (
+    params.includeWrapForShortfall &&
+    toAddress(underlyingMint) === toAddress(NATIVE_MINT) &&
+    preflight.summary.walletFallbackRequired > 0n
+  ) {
+    invariant(
+      !!params.writerSigner,
+      "writerSigner is required when includeWrapForShortfall=true for WSOL shortfall top-up."
+    );
+    const wrapInstructions = await getWrapSOLInstructions({
+      payer: params.writerSigner,
+      owner: params.writer,
+      lamports: preflight.summary.walletFallbackRequired,
+    });
+    return {
+      instructions: [...wrapInstructions, ...unwindTx.instructions],
+    };
+  }
+
+  return unwindTx;
 }
 
 export async function buildUnwindWriterUnsoldTransactionWithDerivation(
@@ -471,6 +533,7 @@ export async function buildUnwindWriterUnsoldTransactionWithDerivation(
     omlpVaultState: params.omlpVaultState,
     omlpVault: params.omlpVault,
     feeWallet: params.feeWallet,
+    writerRepaymentAccount: params.writerRepaymentAccount,
     remainingAccounts: params.remainingAccounts,
   });
 }

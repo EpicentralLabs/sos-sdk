@@ -25,6 +25,7 @@ export * from "./short/builders";
 export * from "./short/claim-theta";
 export * from "./short/close-option";
 export * from "./short/pool";
+export * from "./short/preflight";
 
 export * from "./omlp/builders";
 export * from "./omlp/service";

@@ -88,7 +88,11 @@ Borrow/repay for writers: use `buildOptionMintTransactionWithDerivation` (with v
 
 ## Unwind with Loan Repayment
 
-When a writer unwinds an unsold short that had borrowed from the OMLP pool, the program repays lenders from the collateral vault inside `unwind_writer_unsold` (burn LONG+SHORT, repay loans, then return collateral to writer) in one instruction.
+When a writer unwinds an unsold short that had borrowed from the OMLP pool, the program now repays in this order inside `unwind_writer_unsold`:
+
+1. Collateral vault funds first.
+2. Writer fallback wallet source (`writerRepaymentAccount`) for any shortfall.
+3. If combined funds cannot cover principal + interest + protocol fees, unwind fails with a protocol custom error (not a generic SPL `0x1`).
 
 Use **`buildUnwindWriterUnsoldWithLoanRepayment`** so that:
 
@@ -97,11 +101,50 @@ Use **`buildUnwindWriterUnsoldWithLoanRepayment`** so that:
 3. `remaining_accounts` = **[PoolLoan₁, PoolLoan₂, ...]** only (capped at 20 loans per tx).
 4. One transaction burns, repays lenders from collateral vault, and returns collateral to the writer.
 
+Use **`preflightUnwindWriterUnsold`** before building the transaction to get:
+
+- Per-loan principal/interest/protocol-fee breakdown.
+- Aggregate owed, collateral-vault available, wallet fallback required, and shortfall.
+- `canRepayFully` so UI can block early with actionable messaging.
+
 If there are no active pool loans for that vault, the API still works and passes empty `remaining_accounts`.
 
 **Alternative (repay then unwind):** For writers with more than ~20 active loans, (1) build `repay_pool_loan_from_collateral` instructions first to reduce loans, then (2) unwind with the remaining loans.
 
 **Stuck loan (InsufficientEscrowBalance):** When standard repay fails with `InsufficientEscrowBalance` (escrow underfunded or drained), use `buildRepayPoolLoanFromWalletInstruction` or `buildRepayPoolLoanFromWalletTransaction`. Same accounts as `buildRepayPoolLoanInstruction`; maker pays full principal + interest + fees from their wallet.
+
+### Recommended Preflight + Unwind
+
+```ts
+import {
+  preflightUnwindWriterUnsold,
+  buildUnwindWriterUnsoldWithLoanRepayment,
+} from "@epicentral/sos-sdk";
+
+const preflight = await preflightUnwindWriterUnsold({
+  underlyingAsset,
+  optionType,
+  strikePrice,
+  expirationDate,
+  writer,
+  unwindQty,
+  rpc,
+});
+
+if (!preflight.canRepayFully) {
+  throw new Error(`Unwind blocked. Shortfall: ${preflight.summary.shortfall.toString()}`);
+}
+
+const tx = await buildUnwindWriterUnsoldWithLoanRepayment({
+  underlyingAsset,
+  optionType,
+  strikePrice,
+  expirationDate,
+  writer,
+  unwindQty,
+  rpc,
+});
+```
 
 ## Usage Examples
 
