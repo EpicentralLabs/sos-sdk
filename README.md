@@ -260,3 +260,28 @@ PDAs, fetchers, and builders are exported from the package root.
 ## Program Compatibility
 
 The SDK targets the Solana Option Standard program. Use `PROGRAM_ID` (or `getProgramId()`) from the package for the program address. Pass `programId` in builder params when using a different deployment.
+
+## Collateral Calculation Helper
+
+The SDK exports `calculateRequiredCollateral` for pre-flight collateral estimation:
+
+```ts
+import { calculateRequiredCollateral } from "@epicentral/sos-sdk";
+
+const required = calculateRequiredCollateral(
+  1_000_000n,      // 1 contract in base units
+  150.0,           // $150 strike price
+  145.23,          // Current spot price (USD)
+  9                // Token decimals (9 for SOL)
+);
+// Returns: token base units needed (e.g., 103_280_000_000 lamports for ~103.28 SOL)
+```
+
+**Formula:**
+```
+contracts     = quantity / 1_000_000
+usd_value     = contracts * 100 * strike_price
+collateral    = (usd_value / spot_price) * 10^token_decimals
+```
+
+This matches the on-chain formula in `Vault::calculate_required_collateral` and can be used to display required collateral to users before submitting an `option_mint` transaction.

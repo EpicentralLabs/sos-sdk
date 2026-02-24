@@ -24,9 +24,30 @@ export function assertNonNegativeAmount(value: bigint | number, label: string): 
   }
 }
 
+/**
+ * Calculate required collateral for option position in token base units
+ * Matches on-chain formula: ((qty / 1_000_000) * 100 * strike) / spot * 10^decimals
+ * 
+ * @param quantity - Option quantity in base units (1 contract = 1_000_000)
+ * @param strikePrice - Strike price in USD
+ * @param spotPrice - Current spot price of underlying in USD (from oracle)
+ * @param tokenDecimals - Number of decimals for the underlying token (e.g., 9 for SOL)
+ * @returns Required collateral in token base units
+ */
 export function calculateRequiredCollateral(
   quantity: bigint | number,
-  strikePrice: number
+  strikePrice: number,
+  spotPrice: number,
+  tokenDecimals: number
 ): number {
-  return Number(quantity) * 100 * strikePrice;
+  // Convert base units to contract count
+  const contracts = Number(quantity) / 1_000_000;
+  const contractSize = 100; // 1 contract = 100 units of underlying
+  
+  // USD value needed for collateral
+  const usdRequired = contracts * contractSize * strikePrice;
+  
+  // Convert USD to token base units
+  const baseUnits = 10 ** tokenDecimals;
+  return (usdRequired / spotPrice) * baseUnits;
 }
