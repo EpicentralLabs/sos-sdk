@@ -63,10 +63,21 @@ export interface UnwindPreflightSummary {
   totalInterest: bigint;
   totalProtocolFees: bigint;
   totalOwed: bigint;
+  /** Proportional obligations for partial unwind (based on unwind ratio) */
+  proportionalPrincipal: bigint;
+  proportionalInterest: bigint;
+  proportionalProtocolFees: bigint;
+  proportionalTotalOwed: bigint;
+  /** Collateral return calculation */
+  proportionalCollateralShare: bigint;
+  returnableCollateral: bigint;
   collateralVaultAvailable: bigint;
   walletFallbackAvailable: bigint;
   walletFallbackRequired: bigint;
   shortfall: bigint;
+  /** For top-up UX: explicit shortfall fields */
+  collateralVaultShortfall: bigint;
+  needsWalletTopUp: boolean;
 }
 
 export interface UnwindPreflightResult {
@@ -139,10 +150,18 @@ export async function preflightUnwindWriterUnsold(
         totalInterest: 0n,
         totalProtocolFees: 0n,
         totalOwed: 0n,
+        proportionalPrincipal: 0n,
+        proportionalInterest: 0n,
+        proportionalProtocolFees: 0n,
+        proportionalTotalOwed: 0n,
+        proportionalCollateralShare: 0n,
+        returnableCollateral: 0n,
         collateralVaultAvailable: 0n,
         walletFallbackAvailable: 0n,
         walletFallbackRequired: 0n,
         shortfall: 0n,
+        collateralVaultShortfall: 0n,
+        needsWalletTopUp: false,
       },
     };
   }
@@ -161,10 +180,18 @@ export async function preflightUnwindWriterUnsold(
         totalInterest: 0n,
         totalProtocolFees: 0n,
         totalOwed: 0n,
+        proportionalPrincipal: 0n,
+        proportionalInterest: 0n,
+        proportionalProtocolFees: 0n,
+        proportionalTotalOwed: 0n,
+        proportionalCollateralShare: 0n,
+        returnableCollateral: 0n,
         collateralVaultAvailable: 0n,
         walletFallbackAvailable: 0n,
         walletFallbackRequired: 0n,
         shortfall: 0n,
+        collateralVaultShortfall: 0n,
+        needsWalletTopUp: false,
       },
     };
   }
@@ -220,10 +247,35 @@ export async function preflightUnwindWriterUnsold(
     fetchTokenAmount(params.rpc, writerRepaymentAddress),
   ]);
 
+  // Calculate proportional obligations for partial unwinds
+  const writtenQty = toBigInt(writerPosition.writtenQty);
+  const unwindRatio = writtenQty > 0n ? (unwindQty * 1_000_000n) / writtenQty : 0n; // Basis points precision
+  const unwindRatioDecimal = Number(unwindRatio) / 1_000_000; // Convert to decimal
+
+  // Proportional obligations (for partial unwind logic)
+  const proportionalPrincipal = writtenQty > 0n ? (totals.principal * unwindQty) / writtenQty : 0n;
+  const proportionalInterest = writtenQty > 0n ? (totals.interest * unwindQty) / writtenQty : 0n;
+  const proportionalProtocolFees = writtenQty > 0n ? (totals.fees * unwindQty) / writtenQty : 0n;
+  const proportionalTotalOwed = proportionalPrincipal + proportionalInterest + proportionalProtocolFees;
+
+  // Collateral return calculation (proportional share minus proportional obligations)
+  const collateralDeposited = toBigInt(writerPosition.collateralDeposited);
+  const proportionalCollateralShare = writtenQty > 0n ? (collateralDeposited * unwindQty) / writtenQty : 0n;
+  const returnableCollateral = proportionalCollateralShare > proportionalTotalOwed
+    ? proportionalCollateralShare - proportionalTotalOwed
+    : 0n;
+
+  // Calculate shortfall against proportional obligations
   const walletFallbackRequired =
-    totals.owed > collateralVaultAvailable ? totals.owed - collateralVaultAvailable : 0n;
+    proportionalTotalOwed > collateralVaultAvailable ? proportionalTotalOwed - collateralVaultAvailable : 0n;
   const totalAvailable = collateralVaultAvailable + walletFallbackAvailable;
-  const shortfall = totals.owed > totalAvailable ? totals.owed - totalAvailable : 0n;
+  const shortfall = proportionalTotalOwed > totalAvailable ? proportionalTotalOwed - totalAvailable : 0n;
+
+  // For top-up UX: explicit collateral vault shortfall
+  const collateralVaultShortfall = returnableCollateral > collateralVaultAvailable
+    ? returnableCollateral - collateralVaultAvailable
+    : 0n;
+  const needsWalletTopUp = collateralVaultShortfall > 0n && walletFallbackAvailable < collateralVaultShortfall;
 
   return {
     canUnwind: true,
@@ -239,10 +291,18 @@ export async function preflightUnwindWriterUnsold(
       totalInterest: totals.interest,
       totalProtocolFees: totals.fees,
       totalOwed: totals.owed,
+      proportionalPrincipal,
+      proportionalInterest,
+      proportionalProtocolFees,
+      proportionalTotalOwed,
+      proportionalCollateralShare,
+      returnableCollateral,
       collateralVaultAvailable,
       walletFallbackAvailable,
       walletFallbackRequired,
       shortfall,
+      collateralVaultShortfall,
+      needsWalletTopUp,
     },
   };
 }

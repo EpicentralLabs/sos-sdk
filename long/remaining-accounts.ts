@@ -19,7 +19,20 @@ export async function getBuyFromPoolRemainingAccounts(
     optionPool,
     programId ?? PROGRAM_ID
   );
-  const sorted = [...positions].sort((a, b) => {
+
+  // Filter out inactive positions (settled, liquidated, or zero unsold)
+  const activePositions = positions.filter((p) => {
+    const isActive = !p.data.isSettled && !p.data.isLiquidated && p.data.unsoldQty > 0;
+    if (!isActive) {
+      console.log(
+        `Filtering out inactive writer position: ${p.address}, ` +
+        `isSettled=${p.data.isSettled}, isLiquidated=${p.data.isLiquidated}, unsoldQty=${p.data.unsoldQty}`
+      );
+    }
+    return isActive;
+  });
+
+  const sorted = [...activePositions].sort((a, b) => {
     const aQty = a.data.unsoldQty;
     const bQty = b.data.unsoldQty;
     return aQty < bQty ? -1 : aQty > bQty ? 1 : 0;

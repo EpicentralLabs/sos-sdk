@@ -55,6 +55,8 @@ export type LiquidateWriterPositionInstruction<
   TAccountOptionAccount extends string | AccountMeta<string> = string,
   TAccountCollateralPool extends string | AccountMeta<string> = string,
   TAccountWriterPosition extends string | AccountMeta<string> = string,
+  TAccountLongMint extends string | AccountMeta<string> = string,
+  TAccountEscrowLongAccount extends string | AccountMeta<string> = string,
   TAccountOmlpVault extends string | AccountMeta<string> = string,
   TAccountUnderlyingMint extends string | AccountMeta<string> = string,
   TAccountMarketData extends string | AccountMeta<string> = string,
@@ -84,6 +86,12 @@ export type LiquidateWriterPositionInstruction<
       TAccountWriterPosition extends string
         ? WritableAccount<TAccountWriterPosition>
         : TAccountWriterPosition,
+      TAccountLongMint extends string
+        ? WritableAccount<TAccountLongMint>
+        : TAccountLongMint,
+      TAccountEscrowLongAccount extends string
+        ? WritableAccount<TAccountEscrowLongAccount>
+        : TAccountEscrowLongAccount,
       TAccountOmlpVault extends string
         ? WritableAccount<TAccountOmlpVault>
         : TAccountOmlpVault,
@@ -156,6 +164,8 @@ export type LiquidateWriterPositionAsyncInput<
   TAccountOptionAccount extends string = string,
   TAccountCollateralPool extends string = string,
   TAccountWriterPosition extends string = string,
+  TAccountLongMint extends string = string,
+  TAccountEscrowLongAccount extends string = string,
   TAccountOmlpVault extends string = string,
   TAccountUnderlyingMint extends string = string,
   TAccountMarketData extends string = string,
@@ -175,6 +185,10 @@ export type LiquidateWriterPositionAsyncInput<
   collateralPool?: Address<TAccountCollateralPool>;
   /** Writer's position to liquidate */
   writerPosition: Address<TAccountWriterPosition>;
+  /** LONG token mint (for burning unsold tokens) */
+  longMint: Address<TAccountLongMint>;
+  /** Pool's LONG escrow account (holds unsold LONG tokens to burn) */
+  escrowLongAccount: Address<TAccountEscrowLongAccount>;
   /** OMLP Vault (for repayment tracking) */
   omlpVault: Address<TAccountOmlpVault>;
   /** Underlying token mint (for decimal handling) */
@@ -200,6 +214,8 @@ export async function getLiquidateWriterPositionInstructionAsync<
   TAccountOptionAccount extends string,
   TAccountCollateralPool extends string,
   TAccountWriterPosition extends string,
+  TAccountLongMint extends string,
+  TAccountEscrowLongAccount extends string,
   TAccountOmlpVault extends string,
   TAccountUnderlyingMint extends string,
   TAccountMarketData extends string,
@@ -217,6 +233,8 @@ export async function getLiquidateWriterPositionInstructionAsync<
     TAccountOptionAccount,
     TAccountCollateralPool,
     TAccountWriterPosition,
+    TAccountLongMint,
+    TAccountEscrowLongAccount,
     TAccountOmlpVault,
     TAccountUnderlyingMint,
     TAccountMarketData,
@@ -236,6 +254,8 @@ export async function getLiquidateWriterPositionInstructionAsync<
     TAccountOptionAccount,
     TAccountCollateralPool,
     TAccountWriterPosition,
+    TAccountLongMint,
+    TAccountEscrowLongAccount,
     TAccountOmlpVault,
     TAccountUnderlyingMint,
     TAccountMarketData,
@@ -258,6 +278,11 @@ export async function getLiquidateWriterPositionInstructionAsync<
     optionAccount: { value: input.optionAccount ?? null, isWritable: true },
     collateralPool: { value: input.collateralPool ?? null, isWritable: true },
     writerPosition: { value: input.writerPosition ?? null, isWritable: true },
+    longMint: { value: input.longMint ?? null, isWritable: true },
+    escrowLongAccount: {
+      value: input.escrowLongAccount ?? null,
+      isWritable: true,
+    },
     omlpVault: { value: input.omlpVault ?? null, isWritable: true },
     underlyingMint: { value: input.underlyingMint ?? null, isWritable: false },
     marketData: { value: input.marketData ?? null, isWritable: false },
@@ -308,6 +333,8 @@ export async function getLiquidateWriterPositionInstructionAsync<
       getAccountMeta(accounts.optionAccount),
       getAccountMeta(accounts.collateralPool),
       getAccountMeta(accounts.writerPosition),
+      getAccountMeta(accounts.longMint),
+      getAccountMeta(accounts.escrowLongAccount),
       getAccountMeta(accounts.omlpVault),
       getAccountMeta(accounts.underlyingMint),
       getAccountMeta(accounts.marketData),
@@ -327,6 +354,8 @@ export async function getLiquidateWriterPositionInstructionAsync<
     TAccountOptionAccount,
     TAccountCollateralPool,
     TAccountWriterPosition,
+    TAccountLongMint,
+    TAccountEscrowLongAccount,
     TAccountOmlpVault,
     TAccountUnderlyingMint,
     TAccountMarketData,
@@ -345,6 +374,8 @@ export type LiquidateWriterPositionInput<
   TAccountOptionAccount extends string = string,
   TAccountCollateralPool extends string = string,
   TAccountWriterPosition extends string = string,
+  TAccountLongMint extends string = string,
+  TAccountEscrowLongAccount extends string = string,
   TAccountOmlpVault extends string = string,
   TAccountUnderlyingMint extends string = string,
   TAccountMarketData extends string = string,
@@ -364,6 +395,10 @@ export type LiquidateWriterPositionInput<
   collateralPool: Address<TAccountCollateralPool>;
   /** Writer's position to liquidate */
   writerPosition: Address<TAccountWriterPosition>;
+  /** LONG token mint (for burning unsold tokens) */
+  longMint: Address<TAccountLongMint>;
+  /** Pool's LONG escrow account (holds unsold LONG tokens to burn) */
+  escrowLongAccount: Address<TAccountEscrowLongAccount>;
   /** OMLP Vault (for repayment tracking) */
   omlpVault: Address<TAccountOmlpVault>;
   /** Underlying token mint (for decimal handling) */
@@ -389,6 +424,8 @@ export function getLiquidateWriterPositionInstruction<
   TAccountOptionAccount extends string,
   TAccountCollateralPool extends string,
   TAccountWriterPosition extends string,
+  TAccountLongMint extends string,
+  TAccountEscrowLongAccount extends string,
   TAccountOmlpVault extends string,
   TAccountUnderlyingMint extends string,
   TAccountMarketData extends string,
@@ -406,6 +443,8 @@ export function getLiquidateWriterPositionInstruction<
     TAccountOptionAccount,
     TAccountCollateralPool,
     TAccountWriterPosition,
+    TAccountLongMint,
+    TAccountEscrowLongAccount,
     TAccountOmlpVault,
     TAccountUnderlyingMint,
     TAccountMarketData,
@@ -424,6 +463,8 @@ export function getLiquidateWriterPositionInstruction<
   TAccountOptionAccount,
   TAccountCollateralPool,
   TAccountWriterPosition,
+  TAccountLongMint,
+  TAccountEscrowLongAccount,
   TAccountOmlpVault,
   TAccountUnderlyingMint,
   TAccountMarketData,
@@ -445,6 +486,11 @@ export function getLiquidateWriterPositionInstruction<
     optionAccount: { value: input.optionAccount ?? null, isWritable: true },
     collateralPool: { value: input.collateralPool ?? null, isWritable: true },
     writerPosition: { value: input.writerPosition ?? null, isWritable: true },
+    longMint: { value: input.longMint ?? null, isWritable: true },
+    escrowLongAccount: {
+      value: input.escrowLongAccount ?? null,
+      isWritable: true,
+    },
     omlpVault: { value: input.omlpVault ?? null, isWritable: true },
     underlyingMint: { value: input.underlyingMint ?? null, isWritable: false },
     marketData: { value: input.marketData ?? null, isWritable: false },
@@ -481,6 +527,8 @@ export function getLiquidateWriterPositionInstruction<
       getAccountMeta(accounts.optionAccount),
       getAccountMeta(accounts.collateralPool),
       getAccountMeta(accounts.writerPosition),
+      getAccountMeta(accounts.longMint),
+      getAccountMeta(accounts.escrowLongAccount),
       getAccountMeta(accounts.omlpVault),
       getAccountMeta(accounts.underlyingMint),
       getAccountMeta(accounts.marketData),
@@ -500,6 +548,8 @@ export function getLiquidateWriterPositionInstruction<
     TAccountOptionAccount,
     TAccountCollateralPool,
     TAccountWriterPosition,
+    TAccountLongMint,
+    TAccountEscrowLongAccount,
     TAccountOmlpVault,
     TAccountUnderlyingMint,
     TAccountMarketData,
@@ -527,24 +577,28 @@ export type ParsedLiquidateWriterPositionInstruction<
     collateralPool: TAccountMetas[2];
     /** Writer's position to liquidate */
     writerPosition: TAccountMetas[3];
+    /** LONG token mint (for burning unsold tokens) */
+    longMint: TAccountMetas[4];
+    /** Pool's LONG escrow account (holds unsold LONG tokens to burn) */
+    escrowLongAccount: TAccountMetas[5];
     /** OMLP Vault (for repayment tracking) */
-    omlpVault: TAccountMetas[4];
+    omlpVault: TAccountMetas[6];
     /** Underlying token mint (for decimal handling) */
-    underlyingMint: TAccountMetas[5];
+    underlyingMint: TAccountMetas[7];
     /** Market data account (provides pyth_feed_id for price check) */
-    marketData: TAccountMetas[6];
+    marketData: TAccountMetas[8];
     /** Pyth price update account for current underlying price */
-    priceUpdate: TAccountMetas[7];
+    priceUpdate: TAccountMetas[9];
     /** Collateral vault (source of repayments) */
-    collateralVault: TAccountMetas[8];
+    collateralVault: TAccountMetas[10];
     /** OMLP vault token account (receives loan repayments) */
-    omlpVaultTokenAccount: TAccountMetas[9];
+    omlpVaultTokenAccount: TAccountMetas[11];
     /** Protocol fee wallet (receives liquidation fees) */
-    feeWallet: TAccountMetas[10];
+    feeWallet: TAccountMetas[12];
     /** Liquidator/keeper (permissionless - anyone can call) */
-    liquidator: TAccountMetas[11];
-    tokenProgram: TAccountMetas[12];
-    systemProgram: TAccountMetas[13];
+    liquidator: TAccountMetas[13];
+    tokenProgram: TAccountMetas[14];
+    systemProgram: TAccountMetas[15];
   };
   data: LiquidateWriterPositionInstructionData;
 };
@@ -557,7 +611,7 @@ export function parseLiquidateWriterPositionInstruction<
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedLiquidateWriterPositionInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 14) {
+  if (instruction.accounts.length < 16) {
     // TODO: Coded error.
     throw new Error("Not enough accounts");
   }
@@ -574,6 +628,8 @@ export function parseLiquidateWriterPositionInstruction<
       optionAccount: getNextAccount(),
       collateralPool: getNextAccount(),
       writerPosition: getNextAccount(),
+      longMint: getNextAccount(),
+      escrowLongAccount: getNextAccount(),
       omlpVault: getNextAccount(),
       underlyingMint: getNextAccount(),
       marketData: getNextAccount(),

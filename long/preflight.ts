@@ -63,9 +63,13 @@ export async function preflightBuyFromPoolMarketOrder(
     "Option pool must exist; ensure rpc is provided and pool is initialized."
   );
 
-  const availableWriterPositions = writerPositions.filter(
-    ({ data }) => toBigInt(data.unsoldQty) > 0n
+  // Filter out inactive positions (settled, liquidated, or zero unsold)
+  const activeWriterPositions = writerPositions.filter(
+    ({ data }) => !data.isSettled && !data.isLiquidated && toBigInt(data.unsoldQty) > 0n
   );
+
+  // Use active positions for coverage calculation
+  const availableWriterPositions = activeWriterPositions;
   const remainingUnsoldAggregate = availableWriterPositions.reduce(
     (acc, { data }) => acc + toBigInt(data.unsoldQty),
     0n

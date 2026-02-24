@@ -20,6 +20,7 @@ import type { OptionType } from "../generated/types";
 import { getCreateAssociatedTokenIdempotentInstructionWithAddress, NATIVE_MINT } from "../wsol/instructions";
 import { fetchOptionPool } from "../accounts/fetchers";
 import { getBuyFromPoolRemainingAccounts } from "./remaining-accounts";
+import { fetchWriterPositionsForPool } from "../accounts/list";
 
 export interface BuildBuyFromPoolParams {
   optionPool: AddressLike;
@@ -264,6 +265,24 @@ export async function buildBuyFromPoolMarketOrderTransactionWithDerivation(
   invariant(
     !!refetchedPool,
     "Option pool must exist; ensure rpc is provided and pool is initialized."
+  );
+
+  // Build-time coverage assertion: verify active writer liquidity >= requested quantity
+  // This catches data staleness between preflight and build
+  const quantity = BigInt(params.quantity);
+  const writerPositions = await fetchWriterPositionsForPool(
+    params.rpc,
+    resolved.optionPool,
+    params.programId
+  );
+  const activeUnsoldTotal = writerPositions
+    .filter((p) => !p.data.isSettled && !p.data.isLiquidated && p.data.unsoldQty > 0n)
+    .reduce((sum, p) => sum + p.data.unsoldQty, 0n);
+
+  invariant(
+    activeUnsoldTotal >= quantity,
+    `Insufficient active writer liquidity: available=${activeUnsoldTotal}, requested=${quantity}. ` +
+    `This may indicate data staleness - please refresh and retry.`
   );
 
   const slippageBuffer = normalizeMarketOrderSlippageBuffer(

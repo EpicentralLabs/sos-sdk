@@ -90,11 +90,23 @@ Borrow/repay for writers: use `buildOptionMintTransactionWithDerivation` (with v
 
 ## Unwind with Loan Repayment
 
-When a writer unwinds an unsold short that had borrowed from the OMLP pool, the program now repays in this order inside `unwind_writer_unsold`:
+When a writer unwinds an unsold short that had borrowed from the OMLP pool, the program repays proportionally to the unwind ratio inside `unwind_writer_unsold`:
 
+**Proportional Repayment (partial unwinds):**
+- Unwind ratio = `unwind_qty / written_qty`
+- Principal repaid = `total_loan_principal * unwind_ratio`
+- Interest repaid = `total_accrued_interest * unwind_ratio`
+- Protocol fees repaid = `total_accrued_fees * unwind_ratio`
+
+**Repayment order:**
 1. Collateral vault funds first.
 2. Writer fallback wallet source (`writerRepaymentAccount`) for any shortfall.
-3. If combined funds cannot cover principal + interest + protocol fees, unwind fails with a protocol custom error (not a generic SPL `0x1`).
+3. If combined funds cannot cover proportional principal + interest + protocol fees, unwind fails with a protocol custom error (not a generic SPL `0x1`).
+
+**Collateral Return:**
+- Proportional collateral share = `(collateral_deposited * unwind_qty) / written_qty`
+- Returnable collateral = `proportional_share - amount_already_repaid_from_vault`
+- If vault lacks sufficient post-repayment balance, fails with `InsufficientCollateralVault` (6090)
 
 Use **`buildUnwindWriterUnsoldWithLoanRepayment`** so that:
 
@@ -106,7 +118,10 @@ Use **`buildUnwindWriterUnsoldWithLoanRepayment`** so that:
 Use **`preflightUnwindWriterUnsold`** before building the transaction to get:
 
 - Per-loan principal/interest/protocol-fee breakdown.
-- Aggregate owed, collateral-vault available, wallet fallback required, and shortfall.
+- **Proportional obligations** for partial unwinds (principal, interest, fees, total owed).
+- **Collateral return calculation** (proportional share, returnable amount).
+- Collateral-vault available, wallet fallback required, and shortfall.
+- **Top-up UX fields:** `collateralVaultShortfall`, `needsWalletTopUp`.
 - `canRepayFully` so UI can block early with actionable messaging.
 
 If there are no active pool loans for that vault, the API still works and passes empty `remaining_accounts`.
@@ -198,14 +213,18 @@ const tx = await buildBuyFromPoolMarketOrderTransactionWithDerivation({
   - Convenience for SOL/WSOL: `slippageBufferLamports`
   - Default buffer: `500_000` base units (0.0005 SOL lamports)
 
-### Buy liquidity errors (6041)
+### Buy liquidity errors (6041 split into 6042/6043)
 
-- `InsufficientPoolLiquidity` can happen when:
-  - `option_pool.total_available < quantity`, or
-  - remaining writer-position accounts cannot cover full quantity in the smallest-first fill loop.
-- Recommended client flow:
-  1. Run `preflightBuyFromPoolMarketOrder` for UX gating.
-  2. Build via `buildBuyFromPoolMarketOrderTransactionWithDerivation` so pool + remaining accounts are refetched immediately before build.
+The program uses distinct error codes for liquidity failures:
+
+- `InsufficientPoolAggregateLiquidity` (6042) – `option_pool.total_available < quantity`
+- `InsufficientWriterPositionLiquidity` (6043) – remaining writer-position accounts cannot cover full quantity in the smallest-first fill loop
+
+**Ghost Liquidity:** When `total_available` appears sufficient but active writer positions cannot cover the request. This happens when positions are settled/liquidated but still counted in the aggregate. The SDK now filters inactive positions, and the program skips them in the fill loop.
+
+**Recommended client flow:**
+  1. Run `preflightBuyFromPoolMarketOrder` for UX gating (checks both pool and active writer liquidity).
+  2. Build via `buildBuyFromPoolMarketOrderTransactionWithDerivation` – it refetches pool + remaining accounts and asserts active writer liquidity >= requested quantity before building.
 
 ### Unwind with loan repayment
 
