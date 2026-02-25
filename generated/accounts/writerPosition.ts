@@ -63,6 +63,16 @@ export type WriterPosition = {
   optionPool: Address;
   /** Reference to the option account */
   optionAccount: Address;
+  /**
+   * Mint used for collateral backing this position (e.g., USDC, BTC, SOL)
+   * Can differ from the underlying asset - enables multi-collateral system
+   */
+  collateralMint: Address;
+  /**
+   * Mint used for settlement (same as collateral_mint)
+   * Buyers receive payout in this currency
+   */
+  settlementMint: Address;
   /** Total contracts written (minted) by this writer */
   writtenQty: bigint;
   /** Total contracts sold to buyers (open interest from this writer) */
@@ -115,6 +125,16 @@ export type WriterPositionArgs = {
   optionPool: Address;
   /** Reference to the option account */
   optionAccount: Address;
+  /**
+   * Mint used for collateral backing this position (e.g., USDC, BTC, SOL)
+   * Can differ from the underlying asset - enables multi-collateral system
+   */
+  collateralMint: Address;
+  /**
+   * Mint used for settlement (same as collateral_mint)
+   * Buyers receive payout in this currency
+   */
+  settlementMint: Address;
   /** Total contracts written (minted) by this writer */
   writtenQty: number | bigint;
   /** Total contracts sold to buyers (open interest from this writer) */
@@ -168,6 +188,8 @@ export function getWriterPositionEncoder(): FixedSizeEncoder<WriterPositionArgs>
       ["writerAuthority", getAddressEncoder()],
       ["optionPool", getAddressEncoder()],
       ["optionAccount", getAddressEncoder()],
+      ["collateralMint", getAddressEncoder()],
+      ["settlementMint", getAddressEncoder()],
       ["writtenQty", getU64Encoder()],
       ["soldQty", getU64Encoder()],
       ["unsoldQty", getU64Encoder()],
@@ -203,6 +225,8 @@ export function getWriterPositionDecoder(): FixedSizeDecoder<WriterPosition> {
     ["writerAuthority", getAddressDecoder()],
     ["optionPool", getAddressDecoder()],
     ["optionAccount", getAddressDecoder()],
+    ["collateralMint", getAddressDecoder()],
+    ["settlementMint", getAddressDecoder()],
     ["writtenQty", getU64Decoder()],
     ["soldQty", getU64Decoder()],
     ["unsoldQty", getU64Decoder()],
@@ -299,5 +323,5 @@ export async function fetchAllMaybeWriterPosition(
 }
 
 export function getWriterPositionSize(): number {
-  return 300;
+  return 364;
 }

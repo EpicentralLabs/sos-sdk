@@ -62,6 +62,12 @@ export type PositionAccount = {
   isClosed: boolean;
   isExercised: boolean;
   pnl: bigint;
+  /**
+   * Collateral mint used for settlement (e.g., USDC, BTC, SOL)
+   * Tracks which currency the buyer will receive at exercise/close
+   * Matches the WriterPosition.collateral_mint of the writer(s) who filled this position
+   */
+  collateralMint: Address;
 };
 
 export type PositionAccountArgs = {
@@ -74,6 +80,12 @@ export type PositionAccountArgs = {
   isClosed: boolean;
   isExercised: boolean;
   pnl: number | bigint;
+  /**
+   * Collateral mint used for settlement (e.g., USDC, BTC, SOL)
+   * Tracks which currency the buyer will receive at exercise/close
+   * Matches the WriterPosition.collateral_mint of the writer(s) who filled this position
+   */
+  collateralMint: Address;
 };
 
 /** Gets the encoder for {@link PositionAccountArgs} account data. */
@@ -90,6 +102,7 @@ export function getPositionAccountEncoder(): FixedSizeEncoder<PositionAccountArg
       ["isClosed", getBooleanEncoder()],
       ["isExercised", getBooleanEncoder()],
       ["pnl", getI64Encoder()],
+      ["collateralMint", getAddressEncoder()],
     ]),
     (value) => ({ ...value, discriminator: POSITION_ACCOUNT_DISCRIMINATOR }),
   );
@@ -108,6 +121,7 @@ export function getPositionAccountDecoder(): FixedSizeDecoder<PositionAccount> {
     ["isClosed", getBooleanDecoder()],
     ["isExercised", getBooleanDecoder()],
     ["pnl", getI64Decoder()],
+    ["collateralMint", getAddressDecoder()],
   ]);
 }
 
@@ -183,5 +197,5 @@ export async function fetchAllMaybePositionAccount(
 }
 
 export function getPositionAccountSize(): number {
-  return 114;
+  return 146;
 }

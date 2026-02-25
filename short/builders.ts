@@ -38,11 +38,22 @@ export interface BuildOptionMintParams {
   quantity: bigint | number;
   underlyingAsset: AddressLike;
   underlyingSymbol: string;
+  /**
+   * Collateral mint (e.g., USDC, BTC, SOL) - Writer's choice for backing the position.
+   * Can differ from underlying asset - enables multi-collateral settlement.
+   * OMLP vault routing is based on this mint. Defaults to underlyingMint if not provided.
+   */
+  collateralMint?: AddressLike;
   makerCollateralAmount: bigint | number;
   borrowedAmount: bigint | number;
   maker: AddressLike;
   makerCollateralAccount: AddressLike;
   underlyingMint: AddressLike;
+  /**
+   * Pyth price update account for collateral calculation.
+   * Required to convert USD collateral requirement to token units.
+   */
+  priceUpdate: AddressLike;
   longMetadataAccount?: AddressLike;
   shortMetadataAccount?: AddressLike;
   optionAccount?: AddressLike;
@@ -162,6 +173,7 @@ export async function buildOptionMintInstruction(
     shortMetadataAccount: toAddress(shortMetadata!),
     marketData: params.marketData ? toAddress(params.marketData) : undefined,
     underlyingMint: toAddress(params.underlyingMint),
+    collateralMint: toAddress(params.collateralMint ?? params.underlyingMint),
     optionPool: params.optionPool ? toAddress(params.optionPool) : undefined,
     escrowLongAccount: params.escrowLongAccount
       ? toAddress(params.escrowLongAccount)
@@ -181,6 +193,7 @@ export async function buildOptionMintInstruction(
       ? toAddress(params.escrowTokenAccount)
       : undefined,
     poolLoan: params.poolLoan ? toAddress(params.poolLoan) : undefined,
+    priceUpdate: toAddress(params.priceUpdate),
     maker: toAddress(params.maker) as any,
     optionType: params.optionType,
     strikePrice: params.strikePrice,
@@ -188,6 +201,7 @@ export async function buildOptionMintInstruction(
     quantity: params.quantity,
     underlyingAsset: toAddress(params.underlyingAsset),
     underlyingSymbol: params.underlyingSymbol,
+    collateralMintArg: toAddress(params.collateralMint ?? params.underlyingMint),
     makerCollateralAmount: params.makerCollateralAmount,
     borrowedAmount: params.borrowedAmount,
   });
@@ -210,11 +224,25 @@ export interface BuildOptionMintTransactionWithDerivationParams {
   quantity: bigint | number;
   underlyingMint: AddressLike;
   underlyingSymbol: string;
+  /**
+   * Collateral mint (e.g., USDC, BTC, SOL) - Writer's choice for backing the position.
+   * Can differ from underlying asset - enables multi-collateral settlement.
+   * OMLP vault routing is based on this mint. Defaults to underlyingMint if not provided.
+   */
+  collateralMint?: AddressLike;
   makerCollateralAmount: bigint | number;
   borrowedAmount: bigint | number;
   maker: AddressLike;
-  /** Optional. When omitted, the SDK derives the maker's collateral ATA for underlyingMint. */
+  /**
+   * Optional. When omitted, the SDK derives the maker's collateral ATA for collateralMint
+   * (or underlyingMint if collateralMint is not provided).
+   */
   makerCollateralAccount?: AddressLike;
+  /**
+   * Pyth price update account for collateral calculation.
+   * Required to convert USD collateral requirement to token units.
+   */
+  priceUpdate: AddressLike;
   rpc: KitRpc;
   programId?: AddressLike;
   vault?: AddressLike;
@@ -258,18 +286,20 @@ export async function buildOptionMintTransactionWithDerivation(
   });
 
   const underlyingMint = resolved.underlyingMint ?? params.underlyingMint;
+  const collateralMint = params.collateralMint ?? underlyingMint;
   const [makerLongAccount, makerShortAccount] = await Promise.all([
     deriveAssociatedTokenAddress(params.maker, resolved.longMint),
     deriveAssociatedTokenAddress(params.maker, resolved.shortMint),
   ]);
   const makerCollateralAccount = params.makerCollateralAccount
     ? toAddress(params.makerCollateralAccount)
-    : await deriveAssociatedTokenAddress(params.maker, underlyingMint);
+    : await deriveAssociatedTokenAddress(params.maker, collateralMint);
 
   const tx = await buildOptionMintTransaction({
     ...params,
     underlyingAsset: params.underlyingAsset,
     underlyingMint,
+    collateralMint,
     makerCollateralAccount,
     optionAccount: resolved.optionAccount,
     longMint: resolved.longMint,
@@ -296,7 +326,7 @@ export async function buildOptionMintTransactionWithDerivation(
     await getCreateAssociatedTokenIdempotentInstructionWithAddress(
       params.maker,
       params.maker,
-      underlyingMint,
+      collateralMint,
       makerCollateralAccount
     );
 

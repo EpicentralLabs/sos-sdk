@@ -57,7 +57,7 @@ Additional modules:
 
 | Function | Description |
 |----------|-------------|
-| `buildOptionMintTransactionWithDerivation` | Builds option mint (write) transaction. |
+| `buildOptionMintTransactionWithDerivation` | Builds option mint (write) transaction. Supports multi-collateral: use `collateralMint` to back positions with any supported asset (USDC, BTC, SOL, etc.). |
 | `buildUnwindWriterUnsoldTransactionWithDerivation` | Builds unwind unsold transaction. |
 | `buildUnwindWriterUnsoldWithLoanRepayment` | **Unwind + repay pool loans in one tx.** Use when closing unsold shorts that borrowed from OMLP. |
 | `buildSyncWriterPositionTransaction` | Syncs writer position with pool accumulators. |
@@ -87,6 +87,63 @@ Borrow/repay for writers: use `buildOptionMintTransactionWithDerivation` (with v
 | `getUnwrapSOLInstructions` | Unwraps WSOL to SOL. |
 | `getCreateAssociatedTokenIdempotentInstructionWithAddress` | Creates ATA if missing (idempotent). |
 | `NATIVE_MINT` | WSOL mint address. |
+
+## Multi-Collateral Settlement
+
+The SDK supports universal multi-collateral settlement, allowing writers to use ANY supported asset as collateral for options (not just the underlying). This enables:
+
+- **Capital Efficiency**: Writers use whatever assets they hold (USDC, BTC, SOL, BONK, etc.)
+- **No Forced Conversions**: No swap fees or slippage to get the "correct" collateral
+- **Lender Flexibility**: Lend any supported asset, earn yield in that asset
+
+### How it works
+
+When minting an option, specify `collateralMint` to choose the backing asset:
+
+```ts
+import {
+  buildOptionMintTransactionWithDerivation,
+  OptionType,
+} from "@epicentral/sos-sdk";
+
+// Write SOL calls backed by USDC
+const tx = await buildOptionMintTransactionWithDerivation({
+  underlyingAsset: SOL_MINT,
+  optionType: OptionType.Call,
+  strikePrice: 150.0,
+  expirationDate: BigInt(1735689600),
+  quantity: 1_000_000,           // 1 contract
+  underlyingMint: SOL_MINT,
+  underlyingSymbol: "SOL",
+  collateralMint: USDC_MINT,     // Back with USDC instead of SOL
+  makerCollateralAmount: 780_000_000,  // $780 (10% of $7,800)
+  borrowedAmount: 7_020_000_000,       // $7,020 (90% borrowed)
+  maker: walletAddress,
+  rpc,
+});
+```
+
+**Key points:**
+- `collateralMint` defaults to `underlyingMint` if not provided (backwards compatible)
+- OMLP vault routing is based on `collateralMint` - the vault must exist for the collateral asset
+- At settlement, buyers receive payout in the collateral currency that backed the position
+- The `WriterPosition` account tracks `collateralMint` and `settlementMint` for each position
+
+### Collateral Calculation
+
+Use `calculateRequiredCollateral` to estimate collateral needs before minting:
+
+```ts
+import { calculateRequiredCollateral } from "@epicentral/sos-sdk";
+
+const required = calculateRequiredCollateral(
+  1_000_000n,      // 1 contract in base units
+  150.0,           // $150 strike price
+  145.23,          // Current spot price (USD)
+  6                // USDC decimals
+);
+// Returns: USDC base units needed
+```
 
 ## Unwind with Loan Repayment
 

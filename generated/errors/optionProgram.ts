@@ -196,6 +196,12 @@ export const OPTION_PROGRAM_ERROR__UNWIND_REPAY_WALLET_SOURCE_MISSING = 0x17c8; 
 export const OPTION_PROGRAM_ERROR__UNWIND_REPAY_INSUFFICIENT_TOTAL_FUNDS = 0x17c9; // 6089
 /** InsufficientCollateralVault: Collateral vault has insufficient funds for unwind collateral return */
 export const OPTION_PROGRAM_ERROR__INSUFFICIENT_COLLATERAL_VAULT = 0x17ca; // 6090
+/** InvalidVaultMint: Invalid vault mint - does not match expected collateral mint */
+export const OPTION_PROGRAM_ERROR__INVALID_VAULT_MINT = 0x17cb; // 6091
+/** InvalidCollateralMint: Invalid collateral mint - not supported or no vault exists */
+export const OPTION_PROGRAM_ERROR__INVALID_COLLATERAL_MINT = 0x17cc; // 6092
+/** CollateralMismatch: Collateral mint mismatch - position uses different collateral type */
+export const OPTION_PROGRAM_ERROR__COLLATERAL_MISMATCH = 0x17cd; // 6093
 
 export type OptionProgramError =
   | typeof OPTION_PROGRAM_ERROR__ACCOUNT_FROZEN
@@ -203,6 +209,7 @@ export type OptionProgramError =
   | typeof OPTION_PROGRAM_ERROR__ARITHMETIC_OVERFLOW
   | typeof OPTION_PROGRAM_ERROR__ARITHMETIC_UNDERFLOW
   | typeof OPTION_PROGRAM_ERROR__BATCH_SIZE_EXCEEDED
+  | typeof OPTION_PROGRAM_ERROR__COLLATERAL_MISMATCH
   | typeof OPTION_PROGRAM_ERROR__COLLATERAL_POOL_NOT_FOUND
   | typeof OPTION_PROGRAM_ERROR__CONTRACT_ALREADY_SETTLED
   | typeof OPTION_PROGRAM_ERROR__DIVISION_BY_ZERO
@@ -227,6 +234,7 @@ export type OptionProgramError =
   | typeof OPTION_PROGRAM_ERROR__INVALID_ACCOUNT
   | typeof OPTION_PROGRAM_ERROR__INVALID_AUTHORITY
   | typeof OPTION_PROGRAM_ERROR__INVALID_BUYER_AUTHORITY
+  | typeof OPTION_PROGRAM_ERROR__INVALID_COLLATERAL_MINT
   | typeof OPTION_PROGRAM_ERROR__INVALID_ESCROW_AUTHORITY
   | typeof OPTION_PROGRAM_ERROR__INVALID_ESCROW_MAKER
   | typeof OPTION_PROGRAM_ERROR__INVALID_ESCROW_MINT
@@ -248,6 +256,7 @@ export type OptionProgramError =
   | typeof OPTION_PROGRAM_ERROR__INVALID_TENOR
   | typeof OPTION_PROGRAM_ERROR__INVALID_TIME_TO_EXPIRATION
   | typeof OPTION_PROGRAM_ERROR__INVALID_UNDERLYING_PRICE
+  | typeof OPTION_PROGRAM_ERROR__INVALID_VAULT_MINT
   | typeof OPTION_PROGRAM_ERROR__INVALID_VOLATILITY
   | typeof OPTION_PROGRAM_ERROR__LOW_ORACLE_PRICE_CONFIDENCE
   | typeof OPTION_PROGRAM_ERROR__MARKET_CLOSED
@@ -298,6 +307,7 @@ if (process.env.NODE_ENV !== "production") {
     [OPTION_PROGRAM_ERROR__ARITHMETIC_OVERFLOW]: `Arithmetic overflow occurred`,
     [OPTION_PROGRAM_ERROR__ARITHMETIC_UNDERFLOW]: `Arithmetic underflow occurred`,
     [OPTION_PROGRAM_ERROR__BATCH_SIZE_EXCEEDED]: `Batch size exceeds maximum allowed (10 positions)`,
+    [OPTION_PROGRAM_ERROR__COLLATERAL_MISMATCH]: `Collateral mint mismatch - position uses different collateral type`,
     [OPTION_PROGRAM_ERROR__COLLATERAL_POOL_NOT_FOUND]: `Collateral pool does not exist`,
     [OPTION_PROGRAM_ERROR__CONTRACT_ALREADY_SETTLED]: `Contract already settled`,
     [OPTION_PROGRAM_ERROR__DIVISION_BY_ZERO]: `Division by zero`,
@@ -322,6 +332,7 @@ if (process.env.NODE_ENV !== "production") {
     [OPTION_PROGRAM_ERROR__INVALID_ACCOUNT]: `Invalid account - does not match expected account`,
     [OPTION_PROGRAM_ERROR__INVALID_AUTHORITY]: `Invalid authority - does not match escrow authority`,
     [OPTION_PROGRAM_ERROR__INVALID_BUYER_AUTHORITY]: `Invalid buyer authority`,
+    [OPTION_PROGRAM_ERROR__INVALID_COLLATERAL_MINT]: `Invalid collateral mint - not supported or no vault exists`,
     [OPTION_PROGRAM_ERROR__INVALID_ESCROW_AUTHORITY]: `Invalid escrow authority`,
     [OPTION_PROGRAM_ERROR__INVALID_ESCROW_MAKER]: `Escrow state maker does not match instruction maker`,
     [OPTION_PROGRAM_ERROR__INVALID_ESCROW_MINT]: `Escrow token account mint mismatch`,
@@ -343,6 +354,7 @@ if (process.env.NODE_ENV !== "production") {
     [OPTION_PROGRAM_ERROR__INVALID_TENOR]: `Invalid loan tenor`,
     [OPTION_PROGRAM_ERROR__INVALID_TIME_TO_EXPIRATION]: `Time to expiration must be positive`,
     [OPTION_PROGRAM_ERROR__INVALID_UNDERLYING_PRICE]: `Underlying price is invalid`,
+    [OPTION_PROGRAM_ERROR__INVALID_VAULT_MINT]: `Invalid vault mint - does not match expected collateral mint`,
     [OPTION_PROGRAM_ERROR__INVALID_VOLATILITY]: `Volatility must be greater than zero`,
     [OPTION_PROGRAM_ERROR__LOW_ORACLE_PRICE_CONFIDENCE]: `Oracle price confidence is too low`,
     [OPTION_PROGRAM_ERROR__MARKET_CLOSED]: `Market is closed`,

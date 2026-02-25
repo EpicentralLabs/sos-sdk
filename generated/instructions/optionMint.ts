@@ -79,6 +79,7 @@ export type OptionMintInstruction<
   TAccountShortMetadataAccount extends string | AccountMeta<string> = string,
   TAccountMarketData extends string | AccountMeta<string> = string,
   TAccountUnderlyingMint extends string | AccountMeta<string> = string,
+  TAccountCollateralMint extends string | AccountMeta<string> = string,
   TAccountOptionPool extends string | AccountMeta<string> = string,
   TAccountEscrowLongAccount extends string | AccountMeta<string> = string,
   TAccountPremiumVault extends string | AccountMeta<string> = string,
@@ -139,6 +140,9 @@ export type OptionMintInstruction<
       TAccountUnderlyingMint extends string
         ? ReadonlyAccount<TAccountUnderlyingMint>
         : TAccountUnderlyingMint,
+      TAccountCollateralMint extends string
+        ? ReadonlyAccount<TAccountCollateralMint>
+        : TAccountCollateralMint,
       TAccountOptionPool extends string
         ? WritableAccount<TAccountOptionPool>
         : TAccountOptionPool,
@@ -212,6 +216,7 @@ export type OptionMintInstructionData = {
   quantity: bigint;
   underlyingAsset: Address;
   underlyingSymbol: string;
+  collateralMint: Address;
   makerCollateralAmount: bigint;
   borrowedAmount: bigint;
 };
@@ -223,6 +228,7 @@ export type OptionMintInstructionDataArgs = {
   quantity: number | bigint;
   underlyingAsset: Address;
   underlyingSymbol: string;
+  collateralMint: Address;
   makerCollateralAmount: number | bigint;
   borrowedAmount: number | bigint;
 };
@@ -240,6 +246,7 @@ export function getOptionMintInstructionDataEncoder(): Encoder<OptionMintInstruc
         "underlyingSymbol",
         addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder()),
       ],
+      ["collateralMint", getAddressEncoder()],
       ["makerCollateralAmount", getU64Encoder()],
       ["borrowedAmount", getU64Encoder()],
     ]),
@@ -259,6 +266,7 @@ export function getOptionMintInstructionDataDecoder(): Decoder<OptionMintInstruc
       "underlyingSymbol",
       addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder()),
     ],
+    ["collateralMint", getAddressDecoder()],
     ["makerCollateralAmount", getU64Decoder()],
     ["borrowedAmount", getU64Decoder()],
   ]);
@@ -285,6 +293,7 @@ export type OptionMintAsyncInput<
   TAccountShortMetadataAccount extends string = string,
   TAccountMarketData extends string = string,
   TAccountUnderlyingMint extends string = string,
+  TAccountCollateralMint extends string = string,
   TAccountOptionPool extends string = string,
   TAccountEscrowLongAccount extends string = string,
   TAccountPremiumVault extends string = string,
@@ -330,8 +339,14 @@ export type OptionMintAsyncInput<
   shortMetadataAccount: Address<TAccountShortMetadataAccount>;
   /** Market data account - provides baseline historical volatility for initial IV */
   marketData?: Address<TAccountMarketData>;
-  /** Underlying asset mint (e.g., WSOL) - required for collateral and pool initialization */
+  /** Underlying asset mint (e.g., WSOL) - required for pricing and pool initialization */
   underlyingMint: Address<TAccountUnderlyingMint>;
+  /**
+   * Collateral mint (e.g., USDC, BTC, SOL) - Writer's choice for backing the position
+   * Can differ from underlying_mint - enables multi-collateral settlement
+   * OMLP vault routing is based on this mint
+   */
+  collateralMint: Address<TAccountCollateralMint>;
   /** Option pool - aggregated liquidity pool for this option */
   optionPool?: Address<TAccountOptionPool>;
   /** Pool's escrow for holding LONG tokens (for buyers to purchase) */
@@ -375,6 +390,7 @@ export type OptionMintAsyncInput<
   quantity: OptionMintInstructionDataArgs["quantity"];
   underlyingAsset: OptionMintInstructionDataArgs["underlyingAsset"];
   underlyingSymbol: OptionMintInstructionDataArgs["underlyingSymbol"];
+  collateralMintArg: OptionMintInstructionDataArgs["collateralMint"];
   makerCollateralAmount: OptionMintInstructionDataArgs["makerCollateralAmount"];
   borrowedAmount: OptionMintInstructionDataArgs["borrowedAmount"];
 };
@@ -390,6 +406,7 @@ export async function getOptionMintInstructionAsync<
   TAccountShortMetadataAccount extends string,
   TAccountMarketData extends string,
   TAccountUnderlyingMint extends string,
+  TAccountCollateralMint extends string,
   TAccountOptionPool extends string,
   TAccountEscrowLongAccount extends string,
   TAccountPremiumVault extends string,
@@ -423,6 +440,7 @@ export async function getOptionMintInstructionAsync<
     TAccountShortMetadataAccount,
     TAccountMarketData,
     TAccountUnderlyingMint,
+    TAccountCollateralMint,
     TAccountOptionPool,
     TAccountEscrowLongAccount,
     TAccountPremiumVault,
@@ -458,6 +476,7 @@ export async function getOptionMintInstructionAsync<
     TAccountShortMetadataAccount,
     TAccountMarketData,
     TAccountUnderlyingMint,
+    TAccountCollateralMint,
     TAccountOptionPool,
     TAccountEscrowLongAccount,
     TAccountPremiumVault,
@@ -508,6 +527,7 @@ export async function getOptionMintInstructionAsync<
     },
     marketData: { value: input.marketData ?? null, isWritable: false },
     underlyingMint: { value: input.underlyingMint ?? null, isWritable: false },
+    collateralMint: { value: input.collateralMint ?? null, isWritable: false },
     optionPool: { value: input.optionPool ?? null, isWritable: true },
     escrowLongAccount: {
       value: input.escrowLongAccount ?? null,
@@ -556,7 +576,7 @@ export async function getOptionMintInstructionAsync<
   >;
 
   // Original args.
-  const args = { ...input };
+  const args = { ...input, collateralMint: input.collateralMintArg };
 
   // Resolve default values.
   if (!accounts.optionAccount.value) {
@@ -785,6 +805,7 @@ export async function getOptionMintInstructionAsync<
       getAccountMeta(accounts.shortMetadataAccount),
       getAccountMeta(accounts.marketData),
       getAccountMeta(accounts.underlyingMint),
+      getAccountMeta(accounts.collateralMint),
       getAccountMeta(accounts.optionPool),
       getAccountMeta(accounts.escrowLongAccount),
       getAccountMeta(accounts.premiumVault),
@@ -822,6 +843,7 @@ export async function getOptionMintInstructionAsync<
     TAccountShortMetadataAccount,
     TAccountMarketData,
     TAccountUnderlyingMint,
+    TAccountCollateralMint,
     TAccountOptionPool,
     TAccountEscrowLongAccount,
     TAccountPremiumVault,
@@ -856,6 +878,7 @@ export type OptionMintInput<
   TAccountShortMetadataAccount extends string = string,
   TAccountMarketData extends string = string,
   TAccountUnderlyingMint extends string = string,
+  TAccountCollateralMint extends string = string,
   TAccountOptionPool extends string = string,
   TAccountEscrowLongAccount extends string = string,
   TAccountPremiumVault extends string = string,
@@ -901,8 +924,14 @@ export type OptionMintInput<
   shortMetadataAccount: Address<TAccountShortMetadataAccount>;
   /** Market data account - provides baseline historical volatility for initial IV */
   marketData: Address<TAccountMarketData>;
-  /** Underlying asset mint (e.g., WSOL) - required for collateral and pool initialization */
+  /** Underlying asset mint (e.g., WSOL) - required for pricing and pool initialization */
   underlyingMint: Address<TAccountUnderlyingMint>;
+  /**
+   * Collateral mint (e.g., USDC, BTC, SOL) - Writer's choice for backing the position
+   * Can differ from underlying_mint - enables multi-collateral settlement
+   * OMLP vault routing is based on this mint
+   */
+  collateralMint: Address<TAccountCollateralMint>;
   /** Option pool - aggregated liquidity pool for this option */
   optionPool: Address<TAccountOptionPool>;
   /** Pool's escrow for holding LONG tokens (for buyers to purchase) */
@@ -946,6 +975,7 @@ export type OptionMintInput<
   quantity: OptionMintInstructionDataArgs["quantity"];
   underlyingAsset: OptionMintInstructionDataArgs["underlyingAsset"];
   underlyingSymbol: OptionMintInstructionDataArgs["underlyingSymbol"];
+  collateralMintArg: OptionMintInstructionDataArgs["collateralMint"];
   makerCollateralAmount: OptionMintInstructionDataArgs["makerCollateralAmount"];
   borrowedAmount: OptionMintInstructionDataArgs["borrowedAmount"];
 };
@@ -961,6 +991,7 @@ export function getOptionMintInstruction<
   TAccountShortMetadataAccount extends string,
   TAccountMarketData extends string,
   TAccountUnderlyingMint extends string,
+  TAccountCollateralMint extends string,
   TAccountOptionPool extends string,
   TAccountEscrowLongAccount extends string,
   TAccountPremiumVault extends string,
@@ -994,6 +1025,7 @@ export function getOptionMintInstruction<
     TAccountShortMetadataAccount,
     TAccountMarketData,
     TAccountUnderlyingMint,
+    TAccountCollateralMint,
     TAccountOptionPool,
     TAccountEscrowLongAccount,
     TAccountPremiumVault,
@@ -1028,6 +1060,7 @@ export function getOptionMintInstruction<
   TAccountShortMetadataAccount,
   TAccountMarketData,
   TAccountUnderlyingMint,
+  TAccountCollateralMint,
   TAccountOptionPool,
   TAccountEscrowLongAccount,
   TAccountPremiumVault,
@@ -1077,6 +1110,7 @@ export function getOptionMintInstruction<
     },
     marketData: { value: input.marketData ?? null, isWritable: false },
     underlyingMint: { value: input.underlyingMint ?? null, isWritable: false },
+    collateralMint: { value: input.collateralMint ?? null, isWritable: false },
     optionPool: { value: input.optionPool ?? null, isWritable: true },
     escrowLongAccount: {
       value: input.escrowLongAccount ?? null,
@@ -1125,7 +1159,7 @@ export function getOptionMintInstruction<
   >;
 
   // Original args.
-  const args = { ...input };
+  const args = { ...input, collateralMint: input.collateralMintArg };
 
   // Resolve default values.
   if (!accounts.tokenProgram.value) {
@@ -1162,6 +1196,7 @@ export function getOptionMintInstruction<
       getAccountMeta(accounts.shortMetadataAccount),
       getAccountMeta(accounts.marketData),
       getAccountMeta(accounts.underlyingMint),
+      getAccountMeta(accounts.collateralMint),
       getAccountMeta(accounts.optionPool),
       getAccountMeta(accounts.escrowLongAccount),
       getAccountMeta(accounts.premiumVault),
@@ -1199,6 +1234,7 @@ export function getOptionMintInstruction<
     TAccountShortMetadataAccount,
     TAccountMarketData,
     TAccountUnderlyingMint,
+    TAccountCollateralMint,
     TAccountOptionPool,
     TAccountEscrowLongAccount,
     TAccountPremiumVault,
@@ -1252,45 +1288,51 @@ export type ParsedOptionMintInstruction<
     shortMetadataAccount: TAccountMetas[7];
     /** Market data account - provides baseline historical volatility for initial IV */
     marketData: TAccountMetas[8];
-    /** Underlying asset mint (e.g., WSOL) - required for collateral and pool initialization */
+    /** Underlying asset mint (e.g., WSOL) - required for pricing and pool initialization */
     underlyingMint: TAccountMetas[9];
+    /**
+     * Collateral mint (e.g., USDC, BTC, SOL) - Writer's choice for backing the position
+     * Can differ from underlying_mint - enables multi-collateral settlement
+     * OMLP vault routing is based on this mint
+     */
+    collateralMint: TAccountMetas[10];
     /** Option pool - aggregated liquidity pool for this option */
-    optionPool: TAccountMetas[10];
+    optionPool: TAccountMetas[11];
     /** Pool's escrow for holding LONG tokens (for buyers to purchase) */
-    escrowLongAccount: TAccountMetas[11];
+    escrowLongAccount: TAccountMetas[12];
     /** Pool's vault for collecting premiums (in underlying asset) */
-    premiumVault: TAccountMetas[12];
+    premiumVault: TAccountMetas[13];
     /** Collateral pool for this option */
-    collateralPool: TAccountMetas[13];
+    collateralPool: TAccountMetas[14];
     /** Collateral vault (ATA holding collateral) */
-    collateralVault: TAccountMetas[14];
+    collateralVault: TAccountMetas[15];
     /** Maker's collateral account (source of maker's own collateral) */
-    makerCollateralAccount: TAccountMetas[15];
+    makerCollateralAccount: TAccountMetas[16];
     /** Writer's unified position account (single source of truth) */
-    writerPosition: TAccountMetas[16];
+    writerPosition: TAccountMetas[17];
     /** OMLP vault (optional - only required if borrowing) */
-    vault?: TAccountMetas[17] | undefined;
+    vault?: TAccountMetas[18] | undefined;
     /** Vault's token account (optional - only required if borrowing) */
-    vaultTokenAccount?: TAccountMetas[18] | undefined;
+    vaultTokenAccount?: TAccountMetas[19] | undefined;
     /** Escrow state PDA (optional - only required if borrowing) */
-    escrowState?: TAccountMetas[19] | undefined;
+    escrowState?: TAccountMetas[20] | undefined;
     /** Escrow authority PDA (optional - only required if borrowing) */
-    escrowAuthority?: TAccountMetas[20] | undefined;
+    escrowAuthority?: TAccountMetas[21] | undefined;
     /** Escrow token account (optional - only required if borrowing) */
-    escrowTokenAccount?: TAccountMetas[21] | undefined;
+    escrowTokenAccount?: TAccountMetas[22] | undefined;
     /** Pool loan account (optional - only required if borrowing) */
-    poolLoan?: TAccountMetas[22] | undefined;
+    poolLoan?: TAccountMetas[23] | undefined;
     /**
      * Pyth price update account for collateral calculation
      * Required to convert USD collateral requirement to token units
      */
-    priceUpdate: TAccountMetas[23];
-    maker: TAccountMetas[24];
-    tokenProgram: TAccountMetas[25];
-    associatedTokenProgram: TAccountMetas[26];
-    tokenMetadataProgram: TAccountMetas[27];
-    systemProgram: TAccountMetas[28];
-    rent: TAccountMetas[29];
+    priceUpdate: TAccountMetas[24];
+    maker: TAccountMetas[25];
+    tokenProgram: TAccountMetas[26];
+    associatedTokenProgram: TAccountMetas[27];
+    tokenMetadataProgram: TAccountMetas[28];
+    systemProgram: TAccountMetas[29];
+    rent: TAccountMetas[30];
   };
   data: OptionMintInstructionData;
 };
@@ -1303,7 +1345,7 @@ export function parseOptionMintInstruction<
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedOptionMintInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 30) {
+  if (instruction.accounts.length < 31) {
     // TODO: Coded error.
     throw new Error("Not enough accounts");
   }
@@ -1332,6 +1374,7 @@ export function parseOptionMintInstruction<
       shortMetadataAccount: getNextAccount(),
       marketData: getNextAccount(),
       underlyingMint: getNextAccount(),
+      collateralMint: getNextAccount(),
       optionPool: getNextAccount(),
       escrowLongAccount: getNextAccount(),
       premiumVault: getNextAccount(),
