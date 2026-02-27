@@ -88,7 +88,7 @@ import {
 } from "../instructions";
 
 export const OPTION_PROGRAM_PROGRAM_ADDRESS =
-  "BUszj34jkTxGik2AuVC4oQ3oKNSbkUaZsyNT3DSV8Qgm" as Address<"BUszj34jkTxGik2AuVC4oQ3oKNSbkUaZsyNT3DSV8Qgm">;
+  "J9b2aasyG5WUHCWkND1VR5StENvZX3rLiThs8T6hYGcS" as Address<"J9b2aasyG5WUHCWkND1VR5StENvZX3rLiThs8T6hYGcS">;
 
 export enum OptionProgramAccount {
   CollateralPool,
@@ -679,7 +679,7 @@ export function identifyOptionProgramInstruction(
 }
 
 export type ParsedOptionProgramInstruction<
-  TProgram extends string = "BUszj34jkTxGik2AuVC4oQ3oKNSbkUaZsyNT3DSV8Qgm",
+  TProgram extends string = "J9b2aasyG5WUHCWkND1VR5StENvZX3rLiThs8T6hYGcS",
 > =
   | ({
       instructionType: OptionProgramInstruction.AcceptAdmin;
