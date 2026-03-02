@@ -283,6 +283,25 @@ The program uses distinct error codes for liquidity failures:
   1. Run `preflightBuyFromPoolMarketOrder` for UX gating (checks both pool and active writer liquidity).
   2. Build via `buildBuyFromPoolMarketOrderTransactionWithDerivation` – it refetches pool + remaining accounts and asserts active writer liquidity >= requested quantity before building.
 
+### Framework deserialization errors (`#3003`)
+
+If simulation fails with `custom program error: #3003`, this usually means account deserialization failed before business logic (`60xx`) ran.
+
+Check these first:
+
+- `buyer_position` account shape/size (`146` bytes expected).
+- `market_data` account shape/size (`128` bytes expected).
+- `priceUpdate` is a valid Pyth Receiver `PriceUpdateV2` account.
+- Account list/order matches the generated instruction layout.
+
+This is different from liquidity failures (`6042/6043`) and should be debugged as an account wiring/layout issue.
+
+### Oracle inputs (asset-agnostic)
+
+- Keep oracle handling universal across assets.
+- Provide `priceUpdate` for the selected underlying and allow program-side validation against `market_data.pyth_feed_id`.
+- Avoid hardcoding a single feed/account address in shared SDK integration flows.
+
 ### Unwind with loan repayment
 
 ```ts
