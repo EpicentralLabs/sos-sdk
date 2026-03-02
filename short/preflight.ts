@@ -6,6 +6,7 @@ import { fetchPoolLoansByMaker } from "../accounts/list";
 import { deriveAssociatedTokenAddress, deriveVaultPda, deriveWriterPositionPda } from "../accounts/pdas";
 import { resolveOptionAccounts } from "../accounts/resolve-option";
 import { invariant } from "../shared/errors";
+import { NATIVE_MINT } from "../wsol/instructions";
 
 const TOKEN_ACCOUNT_AMOUNT_OFFSET = 64;
 const BPS_DENOMINATOR = 10_000n;
@@ -78,6 +79,10 @@ export interface UnwindPreflightSummary {
   /** For top-up UX: explicit shortfall fields */
   collateralVaultShortfall: bigint;
   needsWalletTopUp: boolean;
+  /** WSOL-only top-up metadata */
+  solTopUpRequired: bigint;
+  topUpRequiredForRepay: boolean;
+  nativeSolAvailable: bigint;
 }
 
 export interface UnwindPreflightResult {
@@ -111,9 +116,11 @@ export async function preflightUnwindWriterUnsold(
   const underlyingMint = params.underlyingMint ?? resolved.underlyingMint;
   const [vaultPda] = await deriveVaultPda(underlyingMint, params.programId);
   const vaultPdaAddress = toAddress(vaultPda);
+  const writerAddress = toAddress(params.writer);
+  const writerDefaultRepaymentAta = await deriveAssociatedTokenAddress(params.writer, underlyingMint);
   const writerRepaymentAccount =
     params.writerRepaymentAccount ??
-    (await deriveAssociatedTokenAddress(params.writer, underlyingMint));
+    writerDefaultRepaymentAta;
   const writerRepaymentAddress = toAddress(writerRepaymentAccount);
   const [writerPositionAddress] = await deriveWriterPositionPda(
     resolved.optionPool,
@@ -162,6 +169,9 @@ export async function preflightUnwindWriterUnsold(
         shortfall: 0n,
         collateralVaultShortfall: 0n,
         needsWalletTopUp: false,
+        solTopUpRequired: 0n,
+        topUpRequiredForRepay: false,
+        nativeSolAvailable: 0n,
       },
     };
   }
@@ -192,6 +202,9 @@ export async function preflightUnwindWriterUnsold(
         shortfall: 0n,
         collateralVaultShortfall: 0n,
         needsWalletTopUp: false,
+        solTopUpRequired: 0n,
+        topUpRequiredForRepay: false,
+        nativeSolAvailable: 0n,
       },
     };
   }
@@ -242,10 +255,15 @@ export async function preflightUnwindWriterUnsold(
     { principal: 0n, interest: 0n, fees: 0n, owed: 0n }
   );
 
-  const [collateralVaultAvailable, walletFallbackAvailable] = await Promise.all([
+  const isWsolRepaymentPath = toAddress(underlyingMint) === toAddress(NATIVE_MINT);
+  const canTopUpByWrapping =
+    isWsolRepaymentPath && writerRepaymentAddress === toAddress(writerDefaultRepaymentAta);
+  const [collateralVaultAvailable, walletFallbackAvailable, nativeBalanceResponse] = await Promise.all([
     fetchTokenAmount(params.rpc, resolved.collateralVault!),
     fetchTokenAmount(params.rpc, writerRepaymentAddress),
+    canTopUpByWrapping ? params.rpc.getBalance(writerAddress).send() : Promise.resolve({ value: 0n }),
   ]);
+  const nativeSolAvailable = nativeBalanceResponse.value;
 
   // Calculate proportional obligations for partial unwinds
   const writtenQty = toBigInt(writerPosition.writtenQty);
@@ -270,6 +288,12 @@ export async function preflightUnwindWriterUnsold(
     proportionalTotalOwed > collateralVaultAvailable ? proportionalTotalOwed - collateralVaultAvailable : 0n;
   const totalAvailable = collateralVaultAvailable + walletFallbackAvailable;
   const shortfall = proportionalTotalOwed > totalAvailable ? proportionalTotalOwed - totalAvailable : 0n;
+  const solTopUpRequired =
+    walletFallbackRequired > walletFallbackAvailable ? walletFallbackRequired - walletFallbackAvailable : 0n;
+  const topUpRequiredForRepay = solTopUpRequired > 0n;
+  const effectiveTotalAvailable = totalAvailable + (canTopUpByWrapping ? nativeSolAvailable : 0n);
+  const effectiveShortfall =
+    proportionalTotalOwed > effectiveTotalAvailable ? proportionalTotalOwed - effectiveTotalAvailable : 0n;
 
   // For top-up UX: explicit collateral vault shortfall
   const collateralVaultShortfall = returnableCollateral > collateralVaultAvailable
@@ -279,8 +303,11 @@ export async function preflightUnwindWriterUnsold(
 
   return {
     canUnwind: true,
-    canRepayFully: shortfall === 0n,
-    reason: shortfall === 0n ? undefined : "Insufficient combined collateral vault + writer fallback funds",
+    canRepayFully: effectiveShortfall === 0n,
+    reason:
+      effectiveShortfall === 0n
+        ? undefined
+        : "Insufficient combined collateral vault + wallet fallback funds (including SOL top-up capacity for WSOL)",
     writerPositionAddress: String(writerPositionAddress),
     writerRepaymentAccount: String(writerRepaymentAddress),
     collateralVaultAddress: String(resolved.collateralVault),
@@ -303,6 +330,9 @@ export async function preflightUnwindWriterUnsold(
       shortfall,
       collateralVaultShortfall,
       needsWalletTopUp,
+      solTopUpRequired,
+      topUpRequiredForRepay,
+      nativeSolAvailable,
     },
   };
 }

@@ -468,6 +468,7 @@ export async function buildUnwindWriterUnsoldWithLoanRepayment(
   const writerRepaymentAccount =
     params.writerRepaymentAccount ??
     (await deriveAssociatedTokenAddress(params.writer, underlyingMint));
+  const writerDefaultRepaymentAta = await deriveAssociatedTokenAddress(params.writer, underlyingMint);
 
   const preflight = await preflightUnwindWriterUnsold({
     underlyingAsset: params.underlyingAsset,
@@ -480,10 +481,22 @@ export async function buildUnwindWriterUnsoldWithLoanRepayment(
     programId: params.programId,
     underlyingMint,
   });
+  const isWsolPath = toAddress(underlyingMint) === toAddress(NATIVE_MINT);
+  const lamportsToWrap =
+    preflight.summary.walletFallbackRequired > preflight.summary.walletFallbackAvailable
+      ? preflight.summary.walletFallbackRequired - preflight.summary.walletFallbackAvailable
+      : 0n;
+
   invariant(
     preflight.canRepayFully,
-    `Unwind cannot fully repay loans: shortfall=${preflight.summary.shortfall}`
+    `Unwind cannot fully repay loans: required=${preflight.summary.proportionalTotalOwed} available_now=${preflight.summary.collateralVaultAvailable + preflight.summary.walletFallbackAvailable} native_sol_available=${preflight.summary.nativeSolAvailable} remaining_shortfall=${preflight.summary.proportionalTotalOwed - (preflight.summary.collateralVaultAvailable + preflight.summary.walletFallbackAvailable + preflight.summary.nativeSolAvailable)}`
   );
+  if (isWsolPath && lamportsToWrap > 0n && !params.includeWrapForShortfall) {
+    invariant(
+      false,
+      `Unwind requires WSOL top-up of ${lamportsToWrap} lamports. Rebuild with includeWrapForShortfall=true and writerSigner.`
+    );
+  }
 
   const unwindTx = await buildUnwindWriterUnsoldTransactionWithDerivation({
     underlyingAsset: params.underlyingAsset,
@@ -501,11 +514,11 @@ export async function buildUnwindWriterUnsoldWithLoanRepayment(
     remainingAccounts,
   });
 
-  if (
-    params.includeWrapForShortfall &&
-    toAddress(underlyingMint) === toAddress(NATIVE_MINT) &&
-    preflight.summary.walletFallbackRequired > 0n
-  ) {
+  if (params.includeWrapForShortfall && isWsolPath && lamportsToWrap > 0n) {
+    invariant(
+      toAddress(writerRepaymentAccount) === toAddress(writerDefaultRepaymentAta),
+      "WSOL auto-wrap requires writerRepaymentAccount to be the writer WSOL ATA."
+    );
     invariant(
       !!params.writerSigner,
       "writerSigner is required when includeWrapForShortfall=true for WSOL shortfall top-up."
@@ -513,7 +526,7 @@ export async function buildUnwindWriterUnsoldWithLoanRepayment(
     const wrapInstructions = await getWrapSOLInstructions({
       payer: params.writerSigner,
       owner: params.writer,
-      lamports: preflight.summary.walletFallbackRequired,
+      lamports: lamportsToWrap,
     });
     return {
       instructions: [...wrapInstructions, ...unwindTx.instructions],

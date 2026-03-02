@@ -179,7 +179,8 @@ Use **`preflightUnwindWriterUnsold`** before building the transaction to get:
 - **Collateral return calculation** (proportional share, returnable amount).
 - Collateral-vault available, wallet fallback required, and shortfall.
 - **Top-up UX fields:** `collateralVaultShortfall`, `needsWalletTopUp`.
-- `canRepayFully` so UI can block early with actionable messaging.
+- WSOL repay metadata: `solTopUpRequired`, `topUpRequiredForRepay`, `nativeSolAvailable`.
+- `canRepayFully`, which now reflects effective repay solvency (including native SOL top-up capacity for WSOL paths).
 
 If there are no active pool loans for that vault, the API still works and passes empty `remaining_accounts`.
 
@@ -205,10 +206,6 @@ const preflight = await preflightUnwindWriterUnsold({
   rpc,
 });
 
-if (!preflight.canRepayFully) {
-  throw new Error(`Unwind blocked. Shortfall: ${preflight.summary.shortfall.toString()}`);
-}
-
 const tx = await buildUnwindWriterUnsoldWithLoanRepayment({
   underlyingAsset,
   optionType,
@@ -217,8 +214,14 @@ const tx = await buildUnwindWriterUnsoldWithLoanRepayment({
   writer,
   unwindQty,
   rpc,
+  includeWrapForShortfall: true, // for WSOL paths, auto-wrap net top-up when needed
+  writerSigner: walletSigner,    // required when wrapping is needed
 });
 ```
+
+Notes:
+- For WSOL underlyings, the builder wraps only the net required amount: `max(0, walletFallbackRequired - walletFallbackAvailable)`.
+- If repayment is still insolvent after considering vault + fallback + native SOL top-up capacity, the builder throws an actionable insolvency error.
 
 ## Usage Examples
 
