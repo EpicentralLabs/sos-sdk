@@ -60,7 +60,7 @@ export type AutoExerciseExpiredInstruction<
   TAccountBuyerPaymentAccount extends string | AccountMeta<string> = string,
   TAccountBuyerOptionAccount extends string | AccountMeta<string> = string,
   TAccountOptionMint extends string | AccountMeta<string> = string,
-  TAccountPriceUpdate extends string | AccountMeta<string> = string,
+  TAccountSwitchboardFeed extends string | AccountMeta<string> = string,
   TAccountMarketData extends string | AccountMeta<string> = string,
   TAccountOmlpVault extends string | AccountMeta<string> = string,
   TAccountKeeper extends string | AccountMeta<string> = string,
@@ -100,9 +100,9 @@ export type AutoExerciseExpiredInstruction<
       TAccountOptionMint extends string
         ? WritableAccount<TAccountOptionMint>
         : TAccountOptionMint,
-      TAccountPriceUpdate extends string
-        ? ReadonlyAccount<TAccountPriceUpdate>
-        : TAccountPriceUpdate,
+      TAccountSwitchboardFeed extends string
+        ? ReadonlyAccount<TAccountSwitchboardFeed>
+        : TAccountSwitchboardFeed,
       TAccountMarketData extends string
         ? ReadonlyAccount<TAccountMarketData>
         : TAccountMarketData,
@@ -165,7 +165,7 @@ export type AutoExerciseExpiredAsyncInput<
   TAccountBuyerPaymentAccount extends string = string,
   TAccountBuyerOptionAccount extends string = string,
   TAccountOptionMint extends string = string,
-  TAccountPriceUpdate extends string = string,
+  TAccountSwitchboardFeed extends string = string,
   TAccountMarketData extends string = string,
   TAccountOmlpVault extends string = string,
   TAccountKeeper extends string = string,
@@ -190,9 +190,8 @@ export type AutoExerciseExpiredAsyncInput<
   buyerOptionAccount: Address<TAccountBuyerOptionAccount>;
   /** Option mint (for burning) */
   optionMint: Address<TAccountOptionMint>;
-  /** Pyth price update account (ownership validated by Anchor) */
-  priceUpdate: Address<TAccountPriceUpdate>;
-  /** Market data for this underlying asset (contains pyth_feed_id) */
+  switchboardFeed: Address<TAccountSwitchboardFeed>;
+  /** Market data for this underlying asset (contains switchboard_feed_id) */
   marketData: Address<TAccountMarketData>;
   /** OMLP Vault token account to receive repayments */
   omlpVault: Address<TAccountOmlpVault>;
@@ -212,7 +211,7 @@ export async function getAutoExerciseExpiredInstructionAsync<
   TAccountBuyerPaymentAccount extends string,
   TAccountBuyerOptionAccount extends string,
   TAccountOptionMint extends string,
-  TAccountPriceUpdate extends string,
+  TAccountSwitchboardFeed extends string,
   TAccountMarketData extends string,
   TAccountOmlpVault extends string,
   TAccountKeeper extends string,
@@ -230,7 +229,7 @@ export async function getAutoExerciseExpiredInstructionAsync<
     TAccountBuyerPaymentAccount,
     TAccountBuyerOptionAccount,
     TAccountOptionMint,
-    TAccountPriceUpdate,
+    TAccountSwitchboardFeed,
     TAccountMarketData,
     TAccountOmlpVault,
     TAccountKeeper,
@@ -250,7 +249,7 @@ export async function getAutoExerciseExpiredInstructionAsync<
     TAccountBuyerPaymentAccount,
     TAccountBuyerOptionAccount,
     TAccountOptionMint,
-    TAccountPriceUpdate,
+    TAccountSwitchboardFeed,
     TAccountMarketData,
     TAccountOmlpVault,
     TAccountKeeper,
@@ -279,7 +278,10 @@ export async function getAutoExerciseExpiredInstructionAsync<
       isWritable: true,
     },
     optionMint: { value: input.optionMint ?? null, isWritable: true },
-    priceUpdate: { value: input.priceUpdate ?? null, isWritable: false },
+    switchboardFeed: {
+      value: input.switchboardFeed ?? null,
+      isWritable: false,
+    },
     marketData: { value: input.marketData ?? null, isWritable: false },
     omlpVault: { value: input.omlpVault ?? null, isWritable: true },
     keeper: { value: input.keeper ?? null, isWritable: true },
@@ -327,7 +329,7 @@ export async function getAutoExerciseExpiredInstructionAsync<
       getAccountMeta(accounts.buyerPaymentAccount),
       getAccountMeta(accounts.buyerOptionAccount),
       getAccountMeta(accounts.optionMint),
-      getAccountMeta(accounts.priceUpdate),
+      getAccountMeta(accounts.switchboardFeed),
       getAccountMeta(accounts.marketData),
       getAccountMeta(accounts.omlpVault),
       getAccountMeta(accounts.keeper),
@@ -347,7 +349,7 @@ export async function getAutoExerciseExpiredInstructionAsync<
     TAccountBuyerPaymentAccount,
     TAccountBuyerOptionAccount,
     TAccountOptionMint,
-    TAccountPriceUpdate,
+    TAccountSwitchboardFeed,
     TAccountMarketData,
     TAccountOmlpVault,
     TAccountKeeper,
@@ -366,7 +368,7 @@ export type AutoExerciseExpiredInput<
   TAccountBuyerPaymentAccount extends string = string,
   TAccountBuyerOptionAccount extends string = string,
   TAccountOptionMint extends string = string,
-  TAccountPriceUpdate extends string = string,
+  TAccountSwitchboardFeed extends string = string,
   TAccountMarketData extends string = string,
   TAccountOmlpVault extends string = string,
   TAccountKeeper extends string = string,
@@ -391,9 +393,8 @@ export type AutoExerciseExpiredInput<
   buyerOptionAccount: Address<TAccountBuyerOptionAccount>;
   /** Option mint (for burning) */
   optionMint: Address<TAccountOptionMint>;
-  /** Pyth price update account (ownership validated by Anchor) */
-  priceUpdate: Address<TAccountPriceUpdate>;
-  /** Market data for this underlying asset (contains pyth_feed_id) */
+  switchboardFeed: Address<TAccountSwitchboardFeed>;
+  /** Market data for this underlying asset (contains switchboard_feed_id) */
   marketData: Address<TAccountMarketData>;
   /** OMLP Vault token account to receive repayments */
   omlpVault: Address<TAccountOmlpVault>;
@@ -413,7 +414,7 @@ export function getAutoExerciseExpiredInstruction<
   TAccountBuyerPaymentAccount extends string,
   TAccountBuyerOptionAccount extends string,
   TAccountOptionMint extends string,
-  TAccountPriceUpdate extends string,
+  TAccountSwitchboardFeed extends string,
   TAccountMarketData extends string,
   TAccountOmlpVault extends string,
   TAccountKeeper extends string,
@@ -431,7 +432,7 @@ export function getAutoExerciseExpiredInstruction<
     TAccountBuyerPaymentAccount,
     TAccountBuyerOptionAccount,
     TAccountOptionMint,
-    TAccountPriceUpdate,
+    TAccountSwitchboardFeed,
     TAccountMarketData,
     TAccountOmlpVault,
     TAccountKeeper,
@@ -450,7 +451,7 @@ export function getAutoExerciseExpiredInstruction<
   TAccountBuyerPaymentAccount,
   TAccountBuyerOptionAccount,
   TAccountOptionMint,
-  TAccountPriceUpdate,
+  TAccountSwitchboardFeed,
   TAccountMarketData,
   TAccountOmlpVault,
   TAccountKeeper,
@@ -478,7 +479,10 @@ export function getAutoExerciseExpiredInstruction<
       isWritable: true,
     },
     optionMint: { value: input.optionMint ?? null, isWritable: true },
-    priceUpdate: { value: input.priceUpdate ?? null, isWritable: false },
+    switchboardFeed: {
+      value: input.switchboardFeed ?? null,
+      isWritable: false,
+    },
     marketData: { value: input.marketData ?? null, isWritable: false },
     omlpVault: { value: input.omlpVault ?? null, isWritable: true },
     keeper: { value: input.keeper ?? null, isWritable: true },
@@ -512,7 +516,7 @@ export function getAutoExerciseExpiredInstruction<
       getAccountMeta(accounts.buyerPaymentAccount),
       getAccountMeta(accounts.buyerOptionAccount),
       getAccountMeta(accounts.optionMint),
-      getAccountMeta(accounts.priceUpdate),
+      getAccountMeta(accounts.switchboardFeed),
       getAccountMeta(accounts.marketData),
       getAccountMeta(accounts.omlpVault),
       getAccountMeta(accounts.keeper),
@@ -532,7 +536,7 @@ export function getAutoExerciseExpiredInstruction<
     TAccountBuyerPaymentAccount,
     TAccountBuyerOptionAccount,
     TAccountOptionMint,
-    TAccountPriceUpdate,
+    TAccountSwitchboardFeed,
     TAccountMarketData,
     TAccountOmlpVault,
     TAccountKeeper,
@@ -565,9 +569,8 @@ export type ParsedAutoExerciseExpiredInstruction<
     buyerOptionAccount: TAccountMetas[7];
     /** Option mint (for burning) */
     optionMint: TAccountMetas[8];
-    /** Pyth price update account (ownership validated by Anchor) */
-    priceUpdate: TAccountMetas[9];
-    /** Market data for this underlying asset (contains pyth_feed_id) */
+    switchboardFeed: TAccountMetas[9];
+    /** Market data for this underlying asset (contains switchboard_feed_id) */
     marketData: TAccountMetas[10];
     /** OMLP Vault token account to receive repayments */
     omlpVault: TAccountMetas[11];
@@ -609,7 +612,7 @@ export function parseAutoExerciseExpiredInstruction<
       buyerPaymentAccount: getNextAccount(),
       buyerOptionAccount: getNextAccount(),
       optionMint: getNextAccount(),
-      priceUpdate: getNextAccount(),
+      switchboardFeed: getNextAccount(),
       marketData: getNextAccount(),
       omlpVault: getNextAccount(),
       keeper: getNextAccount(),

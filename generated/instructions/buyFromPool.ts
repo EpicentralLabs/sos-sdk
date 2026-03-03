@@ -58,7 +58,7 @@ export type BuyFromPoolInstruction<
   TAccountLongMint extends string | AccountMeta<string> = string,
   TAccountUnderlyingMint extends string | AccountMeta<string> = string,
   TAccountMarketData extends string | AccountMeta<string> = string,
-  TAccountPriceUpdate extends string | AccountMeta<string> = string,
+  TAccountSwitchboardFeed extends string | AccountMeta<string> = string,
   TAccountBuyerPosition extends string | AccountMeta<string> = string,
   TAccountBuyerOptionAccount extends string | AccountMeta<string> = string,
   TAccountBuyerPaymentAccount extends string | AccountMeta<string> = string,
@@ -91,9 +91,9 @@ export type BuyFromPoolInstruction<
       TAccountMarketData extends string
         ? ReadonlyAccount<TAccountMarketData>
         : TAccountMarketData,
-      TAccountPriceUpdate extends string
-        ? ReadonlyAccount<TAccountPriceUpdate>
-        : TAccountPriceUpdate,
+      TAccountSwitchboardFeed extends string
+        ? ReadonlyAccount<TAccountSwitchboardFeed>
+        : TAccountSwitchboardFeed,
       TAccountBuyerPosition extends string
         ? WritableAccount<TAccountBuyerPosition>
         : TAccountBuyerPosition,
@@ -172,7 +172,7 @@ export type BuyFromPoolAsyncInput<
   TAccountLongMint extends string = string,
   TAccountUnderlyingMint extends string = string,
   TAccountMarketData extends string = string,
-  TAccountPriceUpdate extends string = string,
+  TAccountSwitchboardFeed extends string = string,
   TAccountBuyerPosition extends string = string,
   TAccountBuyerOptionAccount extends string = string,
   TAccountBuyerPaymentAccount extends string = string,
@@ -194,10 +194,9 @@ export type BuyFromPoolAsyncInput<
   longMint: Address<TAccountLongMint>;
   /** Underlying token mint (for decimal handling) */
   underlyingMint: Address<TAccountUnderlyingMint>;
-  /** Market data account (provides risk-free rate and pyth_feed_id) */
+  /** Market data account (provides risk-free rate and switchboard_feed_id) */
   marketData: Address<TAccountMarketData>;
-  /** Pyth price update account for current underlying price */
-  priceUpdate: Address<TAccountPriceUpdate>;
+  switchboardFeed: Address<TAccountSwitchboardFeed>;
   /** Buyer's position account (created for tracking) */
   buyerPosition?: Address<TAccountBuyerPosition>;
   /** Buyer's LONG token account (receives LONG tokens) */
@@ -222,7 +221,7 @@ export async function getBuyFromPoolInstructionAsync<
   TAccountLongMint extends string,
   TAccountUnderlyingMint extends string,
   TAccountMarketData extends string,
-  TAccountPriceUpdate extends string,
+  TAccountSwitchboardFeed extends string,
   TAccountBuyerPosition extends string,
   TAccountBuyerOptionAccount extends string,
   TAccountBuyerPaymentAccount extends string,
@@ -240,7 +239,7 @@ export async function getBuyFromPoolInstructionAsync<
     TAccountLongMint,
     TAccountUnderlyingMint,
     TAccountMarketData,
-    TAccountPriceUpdate,
+    TAccountSwitchboardFeed,
     TAccountBuyerPosition,
     TAccountBuyerOptionAccount,
     TAccountBuyerPaymentAccount,
@@ -260,7 +259,7 @@ export async function getBuyFromPoolInstructionAsync<
     TAccountLongMint,
     TAccountUnderlyingMint,
     TAccountMarketData,
-    TAccountPriceUpdate,
+    TAccountSwitchboardFeed,
     TAccountBuyerPosition,
     TAccountBuyerOptionAccount,
     TAccountBuyerPaymentAccount,
@@ -283,7 +282,10 @@ export async function getBuyFromPoolInstructionAsync<
     longMint: { value: input.longMint ?? null, isWritable: false },
     underlyingMint: { value: input.underlyingMint ?? null, isWritable: false },
     marketData: { value: input.marketData ?? null, isWritable: false },
-    priceUpdate: { value: input.priceUpdate ?? null, isWritable: false },
+    switchboardFeed: {
+      value: input.switchboardFeed ?? null,
+      isWritable: false,
+    },
     buyerPosition: { value: input.buyerPosition ?? null, isWritable: true },
     buyerOptionAccount: {
       value: input.buyerOptionAccount ?? null,
@@ -365,7 +367,7 @@ export async function getBuyFromPoolInstructionAsync<
       getAccountMeta(accounts.longMint),
       getAccountMeta(accounts.underlyingMint),
       getAccountMeta(accounts.marketData),
-      getAccountMeta(accounts.priceUpdate),
+      getAccountMeta(accounts.switchboardFeed),
       getAccountMeta(accounts.buyerPosition),
       getAccountMeta(accounts.buyerOptionAccount),
       getAccountMeta(accounts.buyerPaymentAccount),
@@ -387,7 +389,7 @@ export async function getBuyFromPoolInstructionAsync<
     TAccountLongMint,
     TAccountUnderlyingMint,
     TAccountMarketData,
-    TAccountPriceUpdate,
+    TAccountSwitchboardFeed,
     TAccountBuyerPosition,
     TAccountBuyerOptionAccount,
     TAccountBuyerPaymentAccount,
@@ -406,7 +408,7 @@ export type BuyFromPoolInput<
   TAccountLongMint extends string = string,
   TAccountUnderlyingMint extends string = string,
   TAccountMarketData extends string = string,
-  TAccountPriceUpdate extends string = string,
+  TAccountSwitchboardFeed extends string = string,
   TAccountBuyerPosition extends string = string,
   TAccountBuyerOptionAccount extends string = string,
   TAccountBuyerPaymentAccount extends string = string,
@@ -428,10 +430,9 @@ export type BuyFromPoolInput<
   longMint: Address<TAccountLongMint>;
   /** Underlying token mint (for decimal handling) */
   underlyingMint: Address<TAccountUnderlyingMint>;
-  /** Market data account (provides risk-free rate and pyth_feed_id) */
+  /** Market data account (provides risk-free rate and switchboard_feed_id) */
   marketData: Address<TAccountMarketData>;
-  /** Pyth price update account for current underlying price */
-  priceUpdate: Address<TAccountPriceUpdate>;
+  switchboardFeed: Address<TAccountSwitchboardFeed>;
   /** Buyer's position account (created for tracking) */
   buyerPosition: Address<TAccountBuyerPosition>;
   /** Buyer's LONG token account (receives LONG tokens) */
@@ -456,7 +457,7 @@ export function getBuyFromPoolInstruction<
   TAccountLongMint extends string,
   TAccountUnderlyingMint extends string,
   TAccountMarketData extends string,
-  TAccountPriceUpdate extends string,
+  TAccountSwitchboardFeed extends string,
   TAccountBuyerPosition extends string,
   TAccountBuyerOptionAccount extends string,
   TAccountBuyerPaymentAccount extends string,
@@ -474,7 +475,7 @@ export function getBuyFromPoolInstruction<
     TAccountLongMint,
     TAccountUnderlyingMint,
     TAccountMarketData,
-    TAccountPriceUpdate,
+    TAccountSwitchboardFeed,
     TAccountBuyerPosition,
     TAccountBuyerOptionAccount,
     TAccountBuyerPaymentAccount,
@@ -493,7 +494,7 @@ export function getBuyFromPoolInstruction<
   TAccountLongMint,
   TAccountUnderlyingMint,
   TAccountMarketData,
-  TAccountPriceUpdate,
+  TAccountSwitchboardFeed,
   TAccountBuyerPosition,
   TAccountBuyerOptionAccount,
   TAccountBuyerPaymentAccount,
@@ -515,7 +516,10 @@ export function getBuyFromPoolInstruction<
     longMint: { value: input.longMint ?? null, isWritable: false },
     underlyingMint: { value: input.underlyingMint ?? null, isWritable: false },
     marketData: { value: input.marketData ?? null, isWritable: false },
-    priceUpdate: { value: input.priceUpdate ?? null, isWritable: false },
+    switchboardFeed: {
+      value: input.switchboardFeed ?? null,
+      isWritable: false,
+    },
     buyerPosition: { value: input.buyerPosition ?? null, isWritable: true },
     buyerOptionAccount: {
       value: input.buyerOptionAccount ?? null,
@@ -568,7 +572,7 @@ export function getBuyFromPoolInstruction<
       getAccountMeta(accounts.longMint),
       getAccountMeta(accounts.underlyingMint),
       getAccountMeta(accounts.marketData),
-      getAccountMeta(accounts.priceUpdate),
+      getAccountMeta(accounts.switchboardFeed),
       getAccountMeta(accounts.buyerPosition),
       getAccountMeta(accounts.buyerOptionAccount),
       getAccountMeta(accounts.buyerPaymentAccount),
@@ -590,7 +594,7 @@ export function getBuyFromPoolInstruction<
     TAccountLongMint,
     TAccountUnderlyingMint,
     TAccountMarketData,
-    TAccountPriceUpdate,
+    TAccountSwitchboardFeed,
     TAccountBuyerPosition,
     TAccountBuyerOptionAccount,
     TAccountBuyerPaymentAccount,
@@ -620,10 +624,9 @@ export type ParsedBuyFromPoolInstruction<
     longMint: TAccountMetas[2];
     /** Underlying token mint (for decimal handling) */
     underlyingMint: TAccountMetas[3];
-    /** Market data account (provides risk-free rate and pyth_feed_id) */
+    /** Market data account (provides risk-free rate and switchboard_feed_id) */
     marketData: TAccountMetas[4];
-    /** Pyth price update account for current underlying price */
-    priceUpdate: TAccountMetas[5];
+    switchboardFeed: TAccountMetas[5];
     /** Buyer's position account (created for tracking) */
     buyerPosition: TAccountMetas[6];
     /** Buyer's LONG token account (receives LONG tokens) */
@@ -668,7 +671,7 @@ export function parseBuyFromPoolInstruction<
       longMint: getNextAccount(),
       underlyingMint: getNextAccount(),
       marketData: getNextAccount(),
-      priceUpdate: getNextAccount(),
+      switchboardFeed: getNextAccount(),
       buyerPosition: getNextAccount(),
       buyerOptionAccount: getNextAccount(),
       buyerPaymentAccount: getNextAccount(),

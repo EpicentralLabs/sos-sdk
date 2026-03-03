@@ -52,156 +52,160 @@ export const OPTION_PROGRAM_ERROR__STALE_ORACLE_PRICE = 0x1780; // 6016
 export const OPTION_PROGRAM_ERROR__LOW_ORACLE_PRICE_CONFIDENCE = 0x1781; // 6017
 /** InvalidOracleAccount: Invalid oracle account - cannot parse price feed */
 export const OPTION_PROGRAM_ERROR__INVALID_ORACLE_ACCOUNT = 0x1782; // 6018
+/** InvalidSwitchboardQuoteAccount: Invalid Switchboard quote account */
+export const OPTION_PROGRAM_ERROR__INVALID_SWITCHBOARD_QUOTE_ACCOUNT = 0x1783; // 6019
+/** InvalidSwitchboardUpdateProof: Switchboard quote update proof missing or invalid */
+export const OPTION_PROGRAM_ERROR__INVALID_SWITCHBOARD_UPDATE_PROOF = 0x1784; // 6020
 /** OraclePriceUnavailable: Oracle price is unavailable */
-export const OPTION_PROGRAM_ERROR__ORACLE_PRICE_UNAVAILABLE = 0x1783; // 6019
+export const OPTION_PROGRAM_ERROR__ORACLE_PRICE_UNAVAILABLE = 0x1785; // 6021
 /** InvalidOraclePrice: Invalid oracle price - must be positive */
-export const OPTION_PROGRAM_ERROR__INVALID_ORACLE_PRICE = 0x1784; // 6020
+export const OPTION_PROGRAM_ERROR__INVALID_ORACLE_PRICE = 0x1786; // 6022
 /** InsufficientBalance: Insufficient balance for premium payment */
-export const OPTION_PROGRAM_ERROR__INSUFFICIENT_BALANCE = 0x1785; // 6021
+export const OPTION_PROGRAM_ERROR__INSUFFICIENT_BALANCE = 0x1787; // 6023
 /** PositionNotFound: Position not found */
-export const OPTION_PROGRAM_ERROR__POSITION_NOT_FOUND = 0x1786; // 6022
+export const OPTION_PROGRAM_ERROR__POSITION_NOT_FOUND = 0x1788; // 6024
 /** OptionAccountMismatch: Option account mismatch */
-export const OPTION_PROGRAM_ERROR__OPTION_ACCOUNT_MISMATCH = 0x1787; // 6023
+export const OPTION_PROGRAM_ERROR__OPTION_ACCOUNT_MISMATCH = 0x1789; // 6025
 /** ArithmeticOverflow: Arithmetic overflow occurred */
-export const OPTION_PROGRAM_ERROR__ARITHMETIC_OVERFLOW = 0x1788; // 6024
+export const OPTION_PROGRAM_ERROR__ARITHMETIC_OVERFLOW = 0x178a; // 6026
 /** ArithmeticUnderflow: Arithmetic underflow occurred */
-export const OPTION_PROGRAM_ERROR__ARITHMETIC_UNDERFLOW = 0x1789; // 6025
+export const OPTION_PROGRAM_ERROR__ARITHMETIC_UNDERFLOW = 0x178b; // 6027
 /** DivisionByZero: Division by zero */
-export const OPTION_PROGRAM_ERROR__DIVISION_BY_ZERO = 0x178a; // 6026
+export const OPTION_PROGRAM_ERROR__DIVISION_BY_ZERO = 0x178c; // 6028
 /** PremiumCalculationFailed: Premium calculation failed */
-export const OPTION_PROGRAM_ERROR__PREMIUM_CALCULATION_FAILED = 0x178b; // 6027
+export const OPTION_PROGRAM_ERROR__PREMIUM_CALCULATION_FAILED = 0x178d; // 6029
 /** GreeksCalculationFailed: Greeks calculation failed */
-export const OPTION_PROGRAM_ERROR__GREEKS_CALCULATION_FAILED = 0x178c; // 6028
+export const OPTION_PROGRAM_ERROR__GREEKS_CALCULATION_FAILED = 0x178e; // 6030
 /** InvalidEscrowAuthority: Invalid escrow authority */
-export const OPTION_PROGRAM_ERROR__INVALID_ESCROW_AUTHORITY = 0x178d; // 6029
+export const OPTION_PROGRAM_ERROR__INVALID_ESCROW_AUTHORITY = 0x178f; // 6031
 /** EscrowAccountFrozen: Escrow account is frozen */
-export const OPTION_PROGRAM_ERROR__ESCROW_ACCOUNT_FROZEN = 0x178e; // 6030
+export const OPTION_PROGRAM_ERROR__ESCROW_ACCOUNT_FROZEN = 0x1790; // 6032
 /** MarketClosed: Market is closed */
-export const OPTION_PROGRAM_ERROR__MARKET_CLOSED = 0x178f; // 6031
+export const OPTION_PROGRAM_ERROR__MARKET_CLOSED = 0x1791; // 6033
 /** MaxPositionsReached: Maximum positions limit reached */
-export const OPTION_PROGRAM_ERROR__MAX_POSITIONS_REACHED = 0x1790; // 6032
+export const OPTION_PROGRAM_ERROR__MAX_POSITIONS_REACHED = 0x1792; // 6034
 /** MinimumPositionSizeNotMet: Minimum position size not met */
-export const OPTION_PROGRAM_ERROR__MINIMUM_POSITION_SIZE_NOT_MET = 0x1791; // 6033
+export const OPTION_PROGRAM_ERROR__MINIMUM_POSITION_SIZE_NOT_MET = 0x1793; // 6035
 /** MaximumPositionSizeExceeded: Maximum position size exceeded */
-export const OPTION_PROGRAM_ERROR__MAXIMUM_POSITION_SIZE_EXCEEDED = 0x1792; // 6034
+export const OPTION_PROGRAM_ERROR__MAXIMUM_POSITION_SIZE_EXCEEDED = 0x1794; // 6036
 /** InvalidMakerAuthority: Invalid maker authority */
-export const OPTION_PROGRAM_ERROR__INVALID_MAKER_AUTHORITY = 0x1793; // 6035
+export const OPTION_PROGRAM_ERROR__INVALID_MAKER_AUTHORITY = 0x1795; // 6037
 /** InvalidBuyerAuthority: Invalid buyer authority */
-export const OPTION_PROGRAM_ERROR__INVALID_BUYER_AUTHORITY = 0x1794; // 6036
+export const OPTION_PROGRAM_ERROR__INVALID_BUYER_AUTHORITY = 0x1796; // 6038
 /** OptionChainFull: Option chain is full */
-export const OPTION_PROGRAM_ERROR__OPTION_CHAIN_FULL = 0x1795; // 6037
+export const OPTION_PROGRAM_ERROR__OPTION_CHAIN_FULL = 0x1797; // 6039
 /** DuplicateOption: Duplicate option exists */
-export const OPTION_PROGRAM_ERROR__DUPLICATE_OPTION = 0x1796; // 6038
+export const OPTION_PROGRAM_ERROR__DUPLICATE_OPTION = 0x1798; // 6040
 /** PriceImpactTooHigh: Price impact too high */
-export const OPTION_PROGRAM_ERROR__PRICE_IMPACT_TOO_HIGH = 0x1797; // 6039
+export const OPTION_PROGRAM_ERROR__PRICE_IMPACT_TOO_HIGH = 0x1799; // 6041
 /** SlippageToleranceExceeded: Slippage tolerance exceeded */
-export const OPTION_PROGRAM_ERROR__SLIPPAGE_TOLERANCE_EXCEEDED = 0x1798; // 6040
+export const OPTION_PROGRAM_ERROR__SLIPPAGE_TOLERANCE_EXCEEDED = 0x179a; // 6042
 /** InsufficientPoolLiquidity: Insufficient pool liquidity available */
-export const OPTION_PROGRAM_ERROR__INSUFFICIENT_POOL_LIQUIDITY = 0x1799; // 6041
+export const OPTION_PROGRAM_ERROR__INSUFFICIENT_POOL_LIQUIDITY = 0x179b; // 6043
 /** InsufficientPoolAggregateLiquidity: Insufficient aggregate pool liquidity for requested quantity */
-export const OPTION_PROGRAM_ERROR__INSUFFICIENT_POOL_AGGREGATE_LIQUIDITY = 0x179a; // 6042
+export const OPTION_PROGRAM_ERROR__INSUFFICIENT_POOL_AGGREGATE_LIQUIDITY = 0x179c; // 6044
 /** InsufficientWriterPositionLiquidity: Insufficient active writer liquidity to fill requested quantity */
-export const OPTION_PROGRAM_ERROR__INSUFFICIENT_WRITER_POSITION_LIQUIDITY = 0x179b; // 6043
+export const OPTION_PROGRAM_ERROR__INSUFFICIENT_WRITER_POSITION_LIQUIDITY = 0x179d; // 6045
 /** InsufficientUserBalance: Insufficient user balance for withdrawal */
-export const OPTION_PROGRAM_ERROR__INSUFFICIENT_USER_BALANCE = 0x179c; // 6044
+export const OPTION_PROGRAM_ERROR__INSUFFICIENT_USER_BALANCE = 0x179e; // 6046
 /** UnhealthyPosition: Health ratio below liquidation threshold */
-export const OPTION_PROGRAM_ERROR__UNHEALTHY_POSITION = 0x179d; // 6045
+export const OPTION_PROGRAM_ERROR__UNHEALTHY_POSITION = 0x179f; // 6047
 /** UnauthorizedOmlp: Unauthorized to perform this OMLP action */
-export const OPTION_PROGRAM_ERROR__UNAUTHORIZED_OMLP = 0x179e; // 6046
+export const OPTION_PROGRAM_ERROR__UNAUTHORIZED_OMLP = 0x17a0; // 6048
 /** InvalidTenor: Invalid loan tenor */
-export const OPTION_PROGRAM_ERROR__INVALID_TENOR = 0x179f; // 6047
+export const OPTION_PROGRAM_ERROR__INVALID_TENOR = 0x17a1; // 6049
 /** InvalidRate: Invalid interest rate */
-export const OPTION_PROGRAM_ERROR__INVALID_RATE = 0x17a0; // 6048
+export const OPTION_PROGRAM_ERROR__INVALID_RATE = 0x17a2; // 6050
 /** NotForeclosable: Loan is not eligible for foreclosure */
-export const OPTION_PROGRAM_ERROR__NOT_FORECLOSABLE = 0x17a1; // 6049
+export const OPTION_PROGRAM_ERROR__NOT_FORECLOSABLE = 0x17a3; // 6051
 /** InsufficientVaultLiquidity: Vault has insufficient liquidity */
-export const OPTION_PROGRAM_ERROR__INSUFFICIENT_VAULT_LIQUIDITY = 0x17a2; // 6050
+export const OPTION_PROGRAM_ERROR__INSUFFICIENT_VAULT_LIQUIDITY = 0x17a4; // 6052
 /** InsufficientLoanCollateral: Collateral insufficient for loan */
-export const OPTION_PROGRAM_ERROR__INSUFFICIENT_LOAN_COLLATERAL = 0x17a3; // 6051
+export const OPTION_PROGRAM_ERROR__INSUFFICIENT_LOAN_COLLATERAL = 0x17a5; // 6053
 /** OracleTooStale: Oracle price is stale - cannot validate */
-export const OPTION_PROGRAM_ERROR__ORACLE_TOO_STALE = 0x17a4; // 6052
+export const OPTION_PROGRAM_ERROR__ORACLE_TOO_STALE = 0x17a6; // 6054
 /** ValidationRequired: Must call option_validate before borrow/settlement */
-export const OPTION_PROGRAM_ERROR__VALIDATION_REQUIRED = 0x17a5; // 6053
+export const OPTION_PROGRAM_ERROR__VALIDATION_REQUIRED = 0x17a7; // 6055
 /** HealthCalculationFailed: Health ratio calculation failed */
-export const OPTION_PROGRAM_ERROR__HEALTH_CALCULATION_FAILED = 0x17a6; // 6054
+export const OPTION_PROGRAM_ERROR__HEALTH_CALCULATION_FAILED = 0x17a8; // 6056
 /** ContractAlreadySettled: Contract already settled */
-export const OPTION_PROGRAM_ERROR__CONTRACT_ALREADY_SETTLED = 0x17a7; // 6055
+export const OPTION_PROGRAM_ERROR__CONTRACT_ALREADY_SETTLED = 0x17a9; // 6057
 /** NoYieldAvailable: No yield available to claim */
-export const OPTION_PROGRAM_ERROR__NO_YIELD_AVAILABLE = 0x17a8; // 6056
+export const OPTION_PROGRAM_ERROR__NO_YIELD_AVAILABLE = 0x17aa; // 6058
 /** UnauthorizedAccess: Unauthorized access - you don't own this resource */
-export const OPTION_PROGRAM_ERROR__UNAUTHORIZED_ACCESS = 0x17a9; // 6057
+export const OPTION_PROGRAM_ERROR__UNAUTHORIZED_ACCESS = 0x17ab; // 6059
 /** InsufficientQuantity: Insufficient quantity available in ask position */
-export const OPTION_PROGRAM_ERROR__INSUFFICIENT_QUANTITY = 0x17aa; // 6058
+export const OPTION_PROGRAM_ERROR__INSUFFICIENT_QUANTITY = 0x17ac; // 6060
 /** NothingToClaim: Nothing to claim - no unclaimed premium */
-export const OPTION_PROGRAM_ERROR__NOTHING_TO_CLAIM = 0x17ab; // 6059
+export const OPTION_PROGRAM_ERROR__NOTHING_TO_CLAIM = 0x17ad; // 6061
 /** PoolNotActive: Pool is not active */
-export const OPTION_PROGRAM_ERROR__POOL_NOT_ACTIVE = 0x17ac; // 6060
+export const OPTION_PROGRAM_ERROR__POOL_NOT_ACTIVE = 0x17ae; // 6062
 /** PoolAlreadyExists: Pool already exists for this option */
-export const OPTION_PROGRAM_ERROR__POOL_ALREADY_EXISTS = 0x17ad; // 6061
+export const OPTION_PROGRAM_ERROR__POOL_ALREADY_EXISTS = 0x17af; // 6063
 /** PoolNotExercised: Pool has not been exercised yet */
-export const OPTION_PROGRAM_ERROR__POOL_NOT_EXERCISED = 0x17ae; // 6062
+export const OPTION_PROGRAM_ERROR__POOL_NOT_EXERCISED = 0x17b0; // 6064
 /** AlreadySettled: Maker's collateral share has already been settled */
-export const OPTION_PROGRAM_ERROR__ALREADY_SETTLED = 0x17af; // 6063
+export const OPTION_PROGRAM_ERROR__ALREADY_SETTLED = 0x17b1; // 6065
 /** InsufficientPoolCollateral: Insufficient collateral in pool for exercise */
-export const OPTION_PROGRAM_ERROR__INSUFFICIENT_POOL_COLLATERAL = 0x17b0; // 6064
+export const OPTION_PROGRAM_ERROR__INSUFFICIENT_POOL_COLLATERAL = 0x17b2; // 6066
 /** CollateralPoolNotFound: Collateral pool does not exist */
-export const OPTION_PROGRAM_ERROR__COLLATERAL_POOL_NOT_FOUND = 0x17b1; // 6065
+export const OPTION_PROGRAM_ERROR__COLLATERAL_POOL_NOT_FOUND = 0x17b3; // 6067
 /** NoCollateralToWithdraw: No collateral to withdraw */
-export const OPTION_PROGRAM_ERROR__NO_COLLATERAL_TO_WITHDRAW = 0x17b2; // 6066
+export const OPTION_PROGRAM_ERROR__NO_COLLATERAL_TO_WITHDRAW = 0x17b4; // 6068
 /** OptionNotExpired: Option has not expired yet - cannot settle */
-export const OPTION_PROGRAM_ERROR__OPTION_NOT_EXPIRED = 0x17b3; // 6067
+export const OPTION_PROGRAM_ERROR__OPTION_NOT_EXPIRED = 0x17b5; // 6069
 /** SupplyLimitExceeded: Deposit would exceed vault supply limit */
-export const OPTION_PROGRAM_ERROR__SUPPLY_LIMIT_EXCEEDED = 0x17b4; // 6068
+export const OPTION_PROGRAM_ERROR__SUPPLY_LIMIT_EXCEEDED = 0x17b6; // 6070
 /** InvalidFeeWallet: Invalid fee wallet - must match protocol constant */
-export const OPTION_PROGRAM_ERROR__INVALID_FEE_WALLET = 0x17b5; // 6069
+export const OPTION_PROGRAM_ERROR__INVALID_FEE_WALLET = 0x17b7; // 6071
 /** InvalidProtocolFee: Invalid protocol fee rate */
-export const OPTION_PROGRAM_ERROR__INVALID_PROTOCOL_FEE = 0x17b6; // 6070
+export const OPTION_PROGRAM_ERROR__INVALID_PROTOCOL_FEE = 0x17b8; // 6072
 /** UnderlyingAssetMismatch: Underlying asset mismatch - market data or mint does not match option */
-export const OPTION_PROGRAM_ERROR__UNDERLYING_ASSET_MISMATCH = 0x17b7; // 6071
+export const OPTION_PROGRAM_ERROR__UNDERLYING_ASSET_MISMATCH = 0x17b9; // 6073
 /** InvalidMint: Invalid token mint - does not match expected underlying asset */
-export const OPTION_PROGRAM_ERROR__INVALID_MINT = 0x17b8; // 6072
+export const OPTION_PROGRAM_ERROR__INVALID_MINT = 0x17ba; // 6074
 /** BatchSizeExceeded: Batch size exceeds maximum allowed (10 positions) */
-export const OPTION_PROGRAM_ERROR__BATCH_SIZE_EXCEEDED = 0x17b9; // 6073
+export const OPTION_PROGRAM_ERROR__BATCH_SIZE_EXCEEDED = 0x17bb; // 6075
 /** NoPositionsProvided: No positions provided in batch */
-export const OPTION_PROGRAM_ERROR__NO_POSITIONS_PROVIDED = 0x17ba; // 6074
+export const OPTION_PROGRAM_ERROR__NO_POSITIONS_PROVIDED = 0x17bc; // 6076
 /** PositionOptionMismatch: Position account does not belong to this option */
-export const OPTION_PROGRAM_ERROR__POSITION_OPTION_MISMATCH = 0x17bb; // 6075
+export const OPTION_PROGRAM_ERROR__POSITION_OPTION_MISMATCH = 0x17bd; // 6077
 /** OptionPoolMismatch: Option account does not match the option pool's option account */
-export const OPTION_PROGRAM_ERROR__OPTION_POOL_MISMATCH = 0x17bc; // 6076
+export const OPTION_PROGRAM_ERROR__OPTION_POOL_MISMATCH = 0x17be; // 6078
 /** InvalidSeed: Invalid seed - must be exactly 32 bytes */
-export const OPTION_PROGRAM_ERROR__INVALID_SEED = 0x17bd; // 6077
+export const OPTION_PROGRAM_ERROR__INVALID_SEED = 0x17bf; // 6079
 /** InvalidAuthority: Invalid authority - does not match escrow authority */
-export const OPTION_PROGRAM_ERROR__INVALID_AUTHORITY = 0x17be; // 6078
+export const OPTION_PROGRAM_ERROR__INVALID_AUTHORITY = 0x17c0; // 6080
 /** EscrowAccountRequired: Escrow accounts required when borrowed_amount > 0 */
-export const OPTION_PROGRAM_ERROR__ESCROW_ACCOUNT_REQUIRED = 0x17bf; // 6079
+export const OPTION_PROGRAM_ERROR__ESCROW_ACCOUNT_REQUIRED = 0x17c1; // 6081
 /** InvalidEscrowMaker: Escrow state maker does not match instruction maker */
-export const OPTION_PROGRAM_ERROR__INVALID_ESCROW_MAKER = 0x17c0; // 6080
+export const OPTION_PROGRAM_ERROR__INVALID_ESCROW_MAKER = 0x17c2; // 6082
 /** EscrowMintMismatch: Escrow collateral mint does not match collateral pool mint */
-export const OPTION_PROGRAM_ERROR__ESCROW_MINT_MISMATCH = 0x17c1; // 6081
+export const OPTION_PROGRAM_ERROR__ESCROW_MINT_MISMATCH = 0x17c3; // 6083
 /** InsufficientEscrowBalance: Insufficient balance in escrow token account */
-export const OPTION_PROGRAM_ERROR__INSUFFICIENT_ESCROW_BALANCE = 0x17c2; // 6082
+export const OPTION_PROGRAM_ERROR__INSUFFICIENT_ESCROW_BALANCE = 0x17c4; // 6084
 /** InvalidEscrowOwner: Escrow token account owner mismatch */
-export const OPTION_PROGRAM_ERROR__INVALID_ESCROW_OWNER = 0x17c3; // 6083
+export const OPTION_PROGRAM_ERROR__INVALID_ESCROW_OWNER = 0x17c5; // 6085
 /** InvalidEscrowMint: Escrow token account mint mismatch */
-export const OPTION_PROGRAM_ERROR__INVALID_ESCROW_MINT = 0x17c4; // 6084
+export const OPTION_PROGRAM_ERROR__INVALID_ESCROW_MINT = 0x17c6; // 6086
 /** AccountFrozen: Token account is frozen and cannot be burned */
-export const OPTION_PROGRAM_ERROR__ACCOUNT_FROZEN = 0x17c5; // 6085
+export const OPTION_PROGRAM_ERROR__ACCOUNT_FROZEN = 0x17c7; // 6087
 /** InvalidAccount: Invalid account - does not match expected account */
-export const OPTION_PROGRAM_ERROR__INVALID_ACCOUNT = 0x17c6; // 6086
+export const OPTION_PROGRAM_ERROR__INVALID_ACCOUNT = 0x17c8; // 6088
 /** UnwindRepayAccountsMissing: Unwind repayment accounts are required when active pool loans exist */
-export const OPTION_PROGRAM_ERROR__UNWIND_REPAY_ACCOUNTS_MISSING = 0x17c7; // 6087
+export const OPTION_PROGRAM_ERROR__UNWIND_REPAY_ACCOUNTS_MISSING = 0x17c9; // 6089
 /** UnwindRepayWalletSourceMissing: Writer repayment account is required for unwind shortfall fallback */
-export const OPTION_PROGRAM_ERROR__UNWIND_REPAY_WALLET_SOURCE_MISSING = 0x17c8; // 6088
+export const OPTION_PROGRAM_ERROR__UNWIND_REPAY_WALLET_SOURCE_MISSING = 0x17ca; // 6090
 /** UnwindRepayInsufficientTotalFunds: Insufficient total funds to fully repay unwind loans (principal + interest + protocol fees) */
-export const OPTION_PROGRAM_ERROR__UNWIND_REPAY_INSUFFICIENT_TOTAL_FUNDS = 0x17c9; // 6089
+export const OPTION_PROGRAM_ERROR__UNWIND_REPAY_INSUFFICIENT_TOTAL_FUNDS = 0x17cb; // 6091
 /** InsufficientCollateralVault: Collateral vault has insufficient funds for unwind collateral return */
-export const OPTION_PROGRAM_ERROR__INSUFFICIENT_COLLATERAL_VAULT = 0x17ca; // 6090
+export const OPTION_PROGRAM_ERROR__INSUFFICIENT_COLLATERAL_VAULT = 0x17cc; // 6092
 /** InvalidVaultMint: Invalid vault mint - does not match expected collateral mint */
-export const OPTION_PROGRAM_ERROR__INVALID_VAULT_MINT = 0x17cb; // 6091
+export const OPTION_PROGRAM_ERROR__INVALID_VAULT_MINT = 0x17cd; // 6093
 /** InvalidCollateralMint: Invalid collateral mint - not supported or no vault exists */
-export const OPTION_PROGRAM_ERROR__INVALID_COLLATERAL_MINT = 0x17cc; // 6092
+export const OPTION_PROGRAM_ERROR__INVALID_COLLATERAL_MINT = 0x17ce; // 6094
 /** CollateralMismatch: Collateral mint mismatch - position uses different collateral type */
-export const OPTION_PROGRAM_ERROR__COLLATERAL_MISMATCH = 0x17cd; // 6093
+export const OPTION_PROGRAM_ERROR__COLLATERAL_MISMATCH = 0x17cf; // 6095
 
 export type OptionProgramError =
   | typeof OPTION_PROGRAM_ERROR__ACCOUNT_FROZEN
@@ -253,6 +257,8 @@ export type OptionProgramError =
   | typeof OPTION_PROGRAM_ERROR__INVALID_RISK_FREE_RATE
   | typeof OPTION_PROGRAM_ERROR__INVALID_SEED
   | typeof OPTION_PROGRAM_ERROR__INVALID_STRIKE_PRICE
+  | typeof OPTION_PROGRAM_ERROR__INVALID_SWITCHBOARD_QUOTE_ACCOUNT
+  | typeof OPTION_PROGRAM_ERROR__INVALID_SWITCHBOARD_UPDATE_PROOF
   | typeof OPTION_PROGRAM_ERROR__INVALID_TENOR
   | typeof OPTION_PROGRAM_ERROR__INVALID_TIME_TO_EXPIRATION
   | typeof OPTION_PROGRAM_ERROR__INVALID_UNDERLYING_PRICE
@@ -351,6 +357,8 @@ if (process.env.NODE_ENV !== "production") {
     [OPTION_PROGRAM_ERROR__INVALID_RISK_FREE_RATE]: `Risk-free rate must be non-negative`,
     [OPTION_PROGRAM_ERROR__INVALID_SEED]: `Invalid seed - must be exactly 32 bytes`,
     [OPTION_PROGRAM_ERROR__INVALID_STRIKE_PRICE]: `Strike price must be greater than zero`,
+    [OPTION_PROGRAM_ERROR__INVALID_SWITCHBOARD_QUOTE_ACCOUNT]: `Invalid Switchboard quote account`,
+    [OPTION_PROGRAM_ERROR__INVALID_SWITCHBOARD_UPDATE_PROOF]: `Switchboard quote update proof missing or invalid`,
     [OPTION_PROGRAM_ERROR__INVALID_TENOR]: `Invalid loan tenor`,
     [OPTION_PROGRAM_ERROR__INVALID_TIME_TO_EXPIRATION]: `Time to expiration must be positive`,
     [OPTION_PROGRAM_ERROR__INVALID_UNDERLYING_PRICE]: `Underlying price is invalid`,

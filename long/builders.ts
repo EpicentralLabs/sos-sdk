@@ -22,9 +22,10 @@ import {
   getCreateAssociatedTokenIdempotentInstructionWithAddress,
   NATIVE_MINT,
 } from "../wsol/instructions";
-import { fetchOptionPool } from "../accounts/fetchers";
+import { fetchMarketDataAccount, fetchOptionPool } from "../accounts/fetchers";
 import { getBuyFromPoolRemainingAccounts } from "./remaining-accounts";
 import { fetchWriterPositionsForPool } from "../accounts/list";
+import bs58 from "bs58";
 
 export interface BuildBuyFromPoolParams {
   optionPool: AddressLike;
@@ -32,7 +33,7 @@ export interface BuildBuyFromPoolParams {
   longMint: AddressLike;
   underlyingMint: AddressLike;
   marketData: AddressLike;
-  priceUpdate: AddressLike;
+  switchboardFeed: AddressLike;
   buyer: AddressLike;
   buyerPaymentAccount: AddressLike;
   escrowLongAccount: AddressLike;
@@ -53,7 +54,7 @@ export interface BuildCloseLongToPoolParams {
   escrowLongAccount: AddressLike;
   premiumVault: AddressLike;
   marketData: AddressLike;
-  priceUpdate: AddressLike;
+  switchboardFeed: AddressLike;
   buyer: AddressLike;
   buyerLongAccount: AddressLike;
   buyerPayoutAccount: AddressLike;
@@ -87,7 +88,7 @@ export async function buildBuyFromPoolInstruction(
     longMint: toAddress(params.longMint),
     underlyingMint: toAddress(params.underlyingMint),
     marketData: toAddress(params.marketData),
-    priceUpdate: toAddress(params.priceUpdate),
+    switchboardFeed: toAddress(params.switchboardFeed),
     buyer: toAddress(params.buyer) as any,
     buyerPosition: params.buyerPosition ? toAddress(params.buyerPosition) : undefined,
     buyerOptionAccount: params.buyerOptionAccount
@@ -134,7 +135,7 @@ export interface BuildBuyFromPoolTransactionWithDerivationParams {
   expirationDate: bigint | number;
   buyer: AddressLike;
   buyerPaymentAccount: AddressLike;
-  priceUpdate: AddressLike;
+  switchboardFeed?: AddressLike;
   quantity: bigint | number;
   premiumAmount: bigint | number;
   rpc: KitRpc;
@@ -212,13 +213,24 @@ export async function buildBuyFromPoolTransactionWithDerivation(
       : deriveAssociatedTokenAddress(params.buyer, resolved.longMint),
   ]);
 
+  const marketDataAccount = await fetchMarketDataAccount(params.rpc, resolved.marketData);
+  invariant(
+    !!marketDataAccount,
+    "Market data account not found for resolved option market."
+  );
+  const switchboardFeed =
+    params.switchboardFeed ??
+    bs58.encode(
+      Array.from(marketDataAccount.switchboardFeedId as unknown as Uint8Array)
+    );
+
   return buildBuyFromPoolTransaction({
     optionPool: resolved.optionPool,
     optionAccount: resolved.optionAccount,
     longMint: resolved.longMint,
     underlyingMint: resolved.underlyingMint!,
     marketData: resolved.marketData,
-    priceUpdate: params.priceUpdate,
+    switchboardFeed,
     buyer: params.buyer,
     buyerPaymentAccount: params.buyerPaymentAccount,
     escrowLongAccount: resolved.escrowLongAccount!,
@@ -306,13 +318,24 @@ export async function buildBuyFromPoolMarketOrderTransactionWithDerivation(
   const maxPremiumAmount = BigInt(params.quotedPremiumTotal) + slippageBuffer;
   assertPositiveAmount(maxPremiumAmount, "maxPremiumAmount");
 
+  const marketDataAccount = await fetchMarketDataAccount(params.rpc, resolved.marketData);
+  invariant(
+    !!marketDataAccount,
+    "Market data account not found for resolved option market."
+  );
+  const switchboardFeed =
+    params.switchboardFeed ??
+    bs58.encode(
+      Array.from(marketDataAccount.switchboardFeedId as unknown as Uint8Array)
+    );
+
   return buildBuyFromPoolTransaction({
     optionPool: resolved.optionPool,
     optionAccount: resolved.optionAccount,
     longMint: resolved.longMint,
     underlyingMint: refetchedPool.underlyingMint,
     marketData: resolved.marketData,
-    priceUpdate: params.priceUpdate,
+    switchboardFeed,
     buyer: params.buyer,
     buyerPaymentAccount: params.buyerPaymentAccount,
     escrowLongAccount: refetchedPool.escrowLongAccount,
@@ -343,7 +366,7 @@ export async function buildCloseLongToPoolInstruction(
     escrowLongAccount: toAddress(params.escrowLongAccount),
     premiumVault: toAddress(params.premiumVault),
     marketData: toAddress(params.marketData),
-    priceUpdate: toAddress(params.priceUpdate),
+    switchboardFeed: toAddress(params.switchboardFeed),
     buyer: toAddress(params.buyer) as any,
     buyerLongAccount: toAddress(params.buyerLongAccount),
     buyerPayoutAccount: toAddress(params.buyerPayoutAccount),
@@ -397,7 +420,7 @@ export interface BuildCloseLongToPoolTransactionWithDerivationParams {
   buyer: AddressLike;
   buyerLongAccount: AddressLike;
   buyerPayoutAccount: AddressLike;
-  priceUpdate: AddressLike;
+  switchboardFeed?: AddressLike;
   quantity: bigint | number;
   minPayoutAmount: bigint | number;
   rpc: KitRpc;
@@ -451,6 +474,16 @@ export async function buildCloseLongToPoolTransactionWithDerivation(
     params.closeLongTokenAccount !== false;
   const unwrapPayoutSol =
     params.unwrapPayoutSol !== false && isWsolUnderlying;
+  const marketDataAccount = await fetchMarketDataAccount(params.rpc, resolved.marketData);
+  invariant(
+    !!marketDataAccount,
+    "Market data account not found for resolved option market."
+  );
+  const switchboardFeed =
+    params.switchboardFeed ??
+    bs58.encode(
+      Array.from(marketDataAccount.switchboardFeedId as unknown as Uint8Array)
+    );
 
   return buildCloseLongToPoolTransaction({
     optionPool: resolved.optionPool,
@@ -461,7 +494,7 @@ export async function buildCloseLongToPoolTransactionWithDerivation(
     escrowLongAccount: resolved.escrowLongAccount!,
     premiumVault: resolved.premiumVault!,
     marketData: resolved.marketData,
-    priceUpdate: params.priceUpdate,
+    switchboardFeed,
     buyer: params.buyer,
     buyerLongAccount: params.buyerLongAccount,
     buyerPayoutAccount: params.buyerPayoutAccount,

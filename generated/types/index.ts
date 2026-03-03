@@ -20,7 +20,5 @@ export * from "./poolLoanCreated";
 export * from "./poolLoanRepaid";
 export * from "./positionDeposited";
 export * from "./positionWithdrawn";
-export * from "./priceFeedMessage";
 export * from "./protocolFeeUpdated";
 export * from "./vaultCreated";
-export * from "./verificationLevel";

@@ -56,7 +56,7 @@ export type MarketDataAccount = {
   historicalVolatility: number;
   lastUpdated: bigint;
   authority: Address;
-  pythFeedId: ReadonlyUint8Array;
+  switchboardFeedId: ReadonlyUint8Array;
 };
 
 export type MarketDataAccountArgs = {
@@ -65,7 +65,7 @@ export type MarketDataAccountArgs = {
   historicalVolatility: number;
   lastUpdated: number | bigint;
   authority: Address;
-  pythFeedId: ReadonlyUint8Array;
+  switchboardFeedId: ReadonlyUint8Array;
 };
 
 /** Gets the encoder for {@link MarketDataAccountArgs} account data. */
@@ -78,7 +78,7 @@ export function getMarketDataAccountEncoder(): FixedSizeEncoder<MarketDataAccoun
       ["historicalVolatility", getF64Encoder()],
       ["lastUpdated", getI64Encoder()],
       ["authority", getAddressEncoder()],
-      ["pythFeedId", fixEncoderSize(getBytesEncoder(), 32)],
+      ["switchboardFeedId", fixEncoderSize(getBytesEncoder(), 32)],
     ]),
     (value) => ({ ...value, discriminator: MARKET_DATA_ACCOUNT_DISCRIMINATOR }),
   );
@@ -93,7 +93,7 @@ export function getMarketDataAccountDecoder(): FixedSizeDecoder<MarketDataAccoun
     ["historicalVolatility", getF64Decoder()],
     ["lastUpdated", getI64Decoder()],
     ["authority", getAddressDecoder()],
-    ["pythFeedId", fixDecoderSize(getBytesDecoder(), 32)],
+    ["switchboardFeedId", fixDecoderSize(getBytesDecoder(), 32)],
   ]);
 }
 

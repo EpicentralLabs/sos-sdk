@@ -8,7 +8,7 @@ import {
 import type { Instruction, TransactionSigner } from "@solana/kit";
 import { toAddress } from "../client/program";
 import type { AddressLike, BuiltTransaction, KitRpc } from "../client/types";
-import { fetchVault } from "../accounts/fetchers";
+import { fetchMarketDataAccount, fetchVault } from "../accounts/fetchers";
 import { fetchPoolLoansByMaker } from "../accounts/list";
 import { resolveOptionAccounts } from "../accounts/resolve-option";
 import {
@@ -31,6 +31,7 @@ import {
   getWrapSOLInstructions,
 } from "../wsol/instructions";
 import { preflightUnwindWriterUnsold } from "./preflight";
+import bs58 from "bs58";
 
 export interface BuildOptionMintParams {
   optionType: OptionType;
@@ -50,11 +51,8 @@ export interface BuildOptionMintParams {
   maker: AddressLike;
   makerCollateralAccount: AddressLike;
   underlyingMint: AddressLike;
-  /**
-   * Pyth price update account for collateral calculation.
-   * Required to convert USD collateral requirement to token units.
-   */
-  priceUpdate: AddressLike;
+  /** Switchboard pull feed account for collateral calculation. */
+  switchboardFeed: AddressLike;
   longMetadataAccount?: AddressLike;
   shortMetadataAccount?: AddressLike;
   optionAccount?: AddressLike;
@@ -200,7 +198,7 @@ export async function buildOptionMintInstruction(
       ? toAddress(params.escrowTokenAccount)
       : undefined,
     poolLoan: params.poolLoan ? toAddress(params.poolLoan) : undefined,
-    priceUpdate: toAddress(params.priceUpdate),
+    switchboardFeed: toAddress(params.switchboardFeed),
     maker: toAddress(params.maker) as any,
     optionType: params.optionType,
     strikePrice: params.strikePrice,
@@ -259,11 +257,8 @@ export interface BuildOptionMintTransactionWithDerivationParams {
    * (or underlyingMint if collateralMint is not provided).
    */
   makerCollateralAccount?: AddressLike;
-  /**
-   * Pyth price update account for collateral calculation.
-   * Required to convert USD collateral requirement to token units.
-   */
-  priceUpdate: AddressLike;
+  /** Optional explicit Switchboard feed account override. */
+  switchboardFeed?: AddressLike;
   rpc: KitRpc;
   programId?: AddressLike;
   vault?: AddressLike;
@@ -315,6 +310,16 @@ export async function buildOptionMintTransactionWithDerivation(
   const makerCollateralAccount = params.makerCollateralAccount
     ? toAddress(params.makerCollateralAccount)
     : await deriveAssociatedTokenAddress(params.maker, collateralMint);
+  const marketDataAccount = await fetchMarketDataAccount(params.rpc, resolved.marketData);
+  invariant(
+    !!marketDataAccount,
+    "Market data account not found for resolved option market."
+  );
+  const switchboardFeed =
+    params.switchboardFeed ??
+    bs58.encode(
+      Array.from(marketDataAccount.switchboardFeedId as unknown as Uint8Array)
+    );
 
   const tx = await buildOptionMintTransaction({
     ...params,
@@ -334,6 +339,7 @@ export async function buildOptionMintTransactionWithDerivation(
     premiumVault: resolved.premiumVault,
     collateralPool: resolved.collateralPool,
     collateralVault: resolved.collateralVault,
+    switchboardFeed,
     vault: params.vault,
     vaultTokenAccount: params.vaultTokenAccount,
     escrowState: params.escrowState,

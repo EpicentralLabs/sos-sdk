@@ -61,7 +61,7 @@ export type CloseLongToPoolInstruction<
   TAccountEscrowLongAccount extends string | AccountMeta<string> = string,
   TAccountPremiumVault extends string | AccountMeta<string> = string,
   TAccountMarketData extends string | AccountMeta<string> = string,
-  TAccountPriceUpdate extends string | AccountMeta<string> = string,
+  TAccountSwitchboardFeed extends string | AccountMeta<string> = string,
   TAccountBuyerPosition extends string | AccountMeta<string> = string,
   TAccountBuyerLongAccount extends string | AccountMeta<string> = string,
   TAccountBuyerPayoutAccount extends string | AccountMeta<string> = string,
@@ -101,9 +101,9 @@ export type CloseLongToPoolInstruction<
       TAccountMarketData extends string
         ? ReadonlyAccount<TAccountMarketData>
         : TAccountMarketData,
-      TAccountPriceUpdate extends string
-        ? ReadonlyAccount<TAccountPriceUpdate>
-        : TAccountPriceUpdate,
+      TAccountSwitchboardFeed extends string
+        ? ReadonlyAccount<TAccountSwitchboardFeed>
+        : TAccountSwitchboardFeed,
       TAccountBuyerPosition extends string
         ? WritableAccount<TAccountBuyerPosition>
         : TAccountBuyerPosition,
@@ -182,7 +182,7 @@ export type CloseLongToPoolAsyncInput<
   TAccountEscrowLongAccount extends string = string,
   TAccountPremiumVault extends string = string,
   TAccountMarketData extends string = string,
-  TAccountPriceUpdate extends string = string,
+  TAccountSwitchboardFeed extends string = string,
   TAccountBuyerPosition extends string = string,
   TAccountBuyerLongAccount extends string = string,
   TAccountBuyerPayoutAccount extends string = string,
@@ -206,10 +206,9 @@ export type CloseLongToPoolAsyncInput<
   escrowLongAccount: Address<TAccountEscrowLongAccount>;
   /** Premium vault (first source of buyer payout) */
   premiumVault: Address<TAccountPremiumVault>;
-  /** Market data account (provides risk-free rate and pyth_feed_id) */
+  /** Market data account (provides risk-free rate and switchboard_feed_id) */
   marketData: Address<TAccountMarketData>;
-  /** Pyth price update account for current underlying price */
-  priceUpdate: Address<TAccountPriceUpdate>;
+  switchboardFeed: Address<TAccountSwitchboardFeed>;
   /** Buyer's position account */
   buyerPosition?: Address<TAccountBuyerPosition>;
   /** Buyer's LONG token account (source of tokens to return) */
@@ -236,7 +235,7 @@ export async function getCloseLongToPoolInstructionAsync<
   TAccountEscrowLongAccount extends string,
   TAccountPremiumVault extends string,
   TAccountMarketData extends string,
-  TAccountPriceUpdate extends string,
+  TAccountSwitchboardFeed extends string,
   TAccountBuyerPosition extends string,
   TAccountBuyerLongAccount extends string,
   TAccountBuyerPayoutAccount extends string,
@@ -256,7 +255,7 @@ export async function getCloseLongToPoolInstructionAsync<
     TAccountEscrowLongAccount,
     TAccountPremiumVault,
     TAccountMarketData,
-    TAccountPriceUpdate,
+    TAccountSwitchboardFeed,
     TAccountBuyerPosition,
     TAccountBuyerLongAccount,
     TAccountBuyerPayoutAccount,
@@ -278,7 +277,7 @@ export async function getCloseLongToPoolInstructionAsync<
     TAccountEscrowLongAccount,
     TAccountPremiumVault,
     TAccountMarketData,
-    TAccountPriceUpdate,
+    TAccountSwitchboardFeed,
     TAccountBuyerPosition,
     TAccountBuyerLongAccount,
     TAccountBuyerPayoutAccount,
@@ -306,7 +305,10 @@ export async function getCloseLongToPoolInstructionAsync<
     },
     premiumVault: { value: input.premiumVault ?? null, isWritable: true },
     marketData: { value: input.marketData ?? null, isWritable: false },
-    priceUpdate: { value: input.priceUpdate ?? null, isWritable: false },
+    switchboardFeed: {
+      value: input.switchboardFeed ?? null,
+      isWritable: false,
+    },
     buyerPosition: { value: input.buyerPosition ?? null, isWritable: true },
     buyerLongAccount: {
       value: input.buyerLongAccount ?? null,
@@ -377,7 +379,7 @@ export async function getCloseLongToPoolInstructionAsync<
       getAccountMeta(accounts.escrowLongAccount),
       getAccountMeta(accounts.premiumVault),
       getAccountMeta(accounts.marketData),
-      getAccountMeta(accounts.priceUpdate),
+      getAccountMeta(accounts.switchboardFeed),
       getAccountMeta(accounts.buyerPosition),
       getAccountMeta(accounts.buyerLongAccount),
       getAccountMeta(accounts.buyerPayoutAccount),
@@ -401,7 +403,7 @@ export async function getCloseLongToPoolInstructionAsync<
     TAccountEscrowLongAccount,
     TAccountPremiumVault,
     TAccountMarketData,
-    TAccountPriceUpdate,
+    TAccountSwitchboardFeed,
     TAccountBuyerPosition,
     TAccountBuyerLongAccount,
     TAccountBuyerPayoutAccount,
@@ -422,7 +424,7 @@ export type CloseLongToPoolInput<
   TAccountEscrowLongAccount extends string = string,
   TAccountPremiumVault extends string = string,
   TAccountMarketData extends string = string,
-  TAccountPriceUpdate extends string = string,
+  TAccountSwitchboardFeed extends string = string,
   TAccountBuyerPosition extends string = string,
   TAccountBuyerLongAccount extends string = string,
   TAccountBuyerPayoutAccount extends string = string,
@@ -446,10 +448,9 @@ export type CloseLongToPoolInput<
   escrowLongAccount: Address<TAccountEscrowLongAccount>;
   /** Premium vault (first source of buyer payout) */
   premiumVault: Address<TAccountPremiumVault>;
-  /** Market data account (provides risk-free rate and pyth_feed_id) */
+  /** Market data account (provides risk-free rate and switchboard_feed_id) */
   marketData: Address<TAccountMarketData>;
-  /** Pyth price update account for current underlying price */
-  priceUpdate: Address<TAccountPriceUpdate>;
+  switchboardFeed: Address<TAccountSwitchboardFeed>;
   /** Buyer's position account */
   buyerPosition: Address<TAccountBuyerPosition>;
   /** Buyer's LONG token account (source of tokens to return) */
@@ -476,7 +477,7 @@ export function getCloseLongToPoolInstruction<
   TAccountEscrowLongAccount extends string,
   TAccountPremiumVault extends string,
   TAccountMarketData extends string,
-  TAccountPriceUpdate extends string,
+  TAccountSwitchboardFeed extends string,
   TAccountBuyerPosition extends string,
   TAccountBuyerLongAccount extends string,
   TAccountBuyerPayoutAccount extends string,
@@ -496,7 +497,7 @@ export function getCloseLongToPoolInstruction<
     TAccountEscrowLongAccount,
     TAccountPremiumVault,
     TAccountMarketData,
-    TAccountPriceUpdate,
+    TAccountSwitchboardFeed,
     TAccountBuyerPosition,
     TAccountBuyerLongAccount,
     TAccountBuyerPayoutAccount,
@@ -517,7 +518,7 @@ export function getCloseLongToPoolInstruction<
   TAccountEscrowLongAccount,
   TAccountPremiumVault,
   TAccountMarketData,
-  TAccountPriceUpdate,
+  TAccountSwitchboardFeed,
   TAccountBuyerPosition,
   TAccountBuyerLongAccount,
   TAccountBuyerPayoutAccount,
@@ -544,7 +545,10 @@ export function getCloseLongToPoolInstruction<
     },
     premiumVault: { value: input.premiumVault ?? null, isWritable: true },
     marketData: { value: input.marketData ?? null, isWritable: false },
-    priceUpdate: { value: input.priceUpdate ?? null, isWritable: false },
+    switchboardFeed: {
+      value: input.switchboardFeed ?? null,
+      isWritable: false,
+    },
     buyerPosition: { value: input.buyerPosition ?? null, isWritable: true },
     buyerLongAccount: {
       value: input.buyerLongAccount ?? null,
@@ -589,7 +593,7 @@ export function getCloseLongToPoolInstruction<
       getAccountMeta(accounts.escrowLongAccount),
       getAccountMeta(accounts.premiumVault),
       getAccountMeta(accounts.marketData),
-      getAccountMeta(accounts.priceUpdate),
+      getAccountMeta(accounts.switchboardFeed),
       getAccountMeta(accounts.buyerPosition),
       getAccountMeta(accounts.buyerLongAccount),
       getAccountMeta(accounts.buyerPayoutAccount),
@@ -613,7 +617,7 @@ export function getCloseLongToPoolInstruction<
     TAccountEscrowLongAccount,
     TAccountPremiumVault,
     TAccountMarketData,
-    TAccountPriceUpdate,
+    TAccountSwitchboardFeed,
     TAccountBuyerPosition,
     TAccountBuyerLongAccount,
     TAccountBuyerPayoutAccount,
@@ -645,10 +649,9 @@ export type ParsedCloseLongToPoolInstruction<
     escrowLongAccount: TAccountMetas[5];
     /** Premium vault (first source of buyer payout) */
     premiumVault: TAccountMetas[6];
-    /** Market data account (provides risk-free rate and pyth_feed_id) */
+    /** Market data account (provides risk-free rate and switchboard_feed_id) */
     marketData: TAccountMetas[7];
-    /** Pyth price update account for current underlying price */
-    priceUpdate: TAccountMetas[8];
+    switchboardFeed: TAccountMetas[8];
     /** Buyer's position account */
     buyerPosition: TAccountMetas[9];
     /** Buyer's LONG token account (source of tokens to return) */
@@ -701,7 +704,7 @@ export function parseCloseLongToPoolInstruction<
       escrowLongAccount: getNextAccount(),
       premiumVault: getNextAccount(),
       marketData: getNextAccount(),
-      priceUpdate: getNextAccount(),
+      switchboardFeed: getNextAccount(),
       buyerPosition: getNextAccount(),
       buyerLongAccount: getNextAccount(),
       buyerPayoutAccount: getNextAccount(),

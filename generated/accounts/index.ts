@@ -16,6 +16,5 @@ export * from "./optionAccount";
 export * from "./optionPool";
 export * from "./poolLoan";
 export * from "./positionAccount";
-export * from "./priceUpdateV2";
 export * from "./vault";
 export * from "./writerPosition";

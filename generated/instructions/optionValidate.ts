@@ -59,7 +59,7 @@ export type OptionValidateInstruction<
   TProgram extends string = typeof OPTION_PROGRAM_PROGRAM_ADDRESS,
   TAccountOptionAccount extends string | AccountMeta<string> = string,
   TAccountMarketData extends string | AccountMeta<string> = string,
-  TAccountPriceUpdate extends string | AccountMeta<string> = string,
+  TAccountSwitchboardFeed extends string | AccountMeta<string> = string,
   TAccountAuthority extends string | AccountMeta<string> = string,
   TRemainingAccounts extends readonly AccountMeta<string>[] = [],
 > = Instruction<TProgram> &
@@ -72,9 +72,9 @@ export type OptionValidateInstruction<
       TAccountMarketData extends string
         ? ReadonlyAccount<TAccountMarketData>
         : TAccountMarketData,
-      TAccountPriceUpdate extends string
-        ? ReadonlyAccount<TAccountPriceUpdate>
-        : TAccountPriceUpdate,
+      TAccountSwitchboardFeed extends string
+        ? ReadonlyAccount<TAccountSwitchboardFeed>
+        : TAccountSwitchboardFeed,
       TAccountAuthority extends string
         ? ReadonlySignerAccount<TAccountAuthority> &
             AccountSignerMeta<TAccountAuthority>
@@ -134,13 +134,12 @@ export function getOptionValidateInstructionDataCodec(): FixedSizeCodec<
 export type OptionValidateInput<
   TAccountOptionAccount extends string = string,
   TAccountMarketData extends string = string,
-  TAccountPriceUpdate extends string = string,
+  TAccountSwitchboardFeed extends string = string,
   TAccountAuthority extends string = string,
 > = {
   optionAccount: Address<TAccountOptionAccount>;
   marketData: Address<TAccountMarketData>;
-  /** Pyth price update account (ownership validated by Anchor) */
-  priceUpdate: Address<TAccountPriceUpdate>;
+  switchboardFeed: Address<TAccountSwitchboardFeed>;
   authority: TransactionSigner<TAccountAuthority>;
   optionType: OptionValidateInstructionDataArgs["optionType"];
   strikePrice: OptionValidateInstructionDataArgs["strikePrice"];
@@ -151,14 +150,14 @@ export type OptionValidateInput<
 export function getOptionValidateInstruction<
   TAccountOptionAccount extends string,
   TAccountMarketData extends string,
-  TAccountPriceUpdate extends string,
+  TAccountSwitchboardFeed extends string,
   TAccountAuthority extends string,
   TProgramAddress extends Address = typeof OPTION_PROGRAM_PROGRAM_ADDRESS,
 >(
   input: OptionValidateInput<
     TAccountOptionAccount,
     TAccountMarketData,
-    TAccountPriceUpdate,
+    TAccountSwitchboardFeed,
     TAccountAuthority
   >,
   config?: { programAddress?: TProgramAddress },
@@ -166,7 +165,7 @@ export function getOptionValidateInstruction<
   TProgramAddress,
   TAccountOptionAccount,
   TAccountMarketData,
-  TAccountPriceUpdate,
+  TAccountSwitchboardFeed,
   TAccountAuthority
 > {
   // Program address.
@@ -177,7 +176,10 @@ export function getOptionValidateInstruction<
   const originalAccounts = {
     optionAccount: { value: input.optionAccount ?? null, isWritable: true },
     marketData: { value: input.marketData ?? null, isWritable: false },
-    priceUpdate: { value: input.priceUpdate ?? null, isWritable: false },
+    switchboardFeed: {
+      value: input.switchboardFeed ?? null,
+      isWritable: false,
+    },
     authority: { value: input.authority ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
@@ -193,7 +195,7 @@ export function getOptionValidateInstruction<
     accounts: [
       getAccountMeta(accounts.optionAccount),
       getAccountMeta(accounts.marketData),
-      getAccountMeta(accounts.priceUpdate),
+      getAccountMeta(accounts.switchboardFeed),
       getAccountMeta(accounts.authority),
     ],
     data: getOptionValidateInstructionDataEncoder().encode(
@@ -204,7 +206,7 @@ export function getOptionValidateInstruction<
     TProgramAddress,
     TAccountOptionAccount,
     TAccountMarketData,
-    TAccountPriceUpdate,
+    TAccountSwitchboardFeed,
     TAccountAuthority
   >);
 }
@@ -217,8 +219,7 @@ export type ParsedOptionValidateInstruction<
   accounts: {
     optionAccount: TAccountMetas[0];
     marketData: TAccountMetas[1];
-    /** Pyth price update account (ownership validated by Anchor) */
-    priceUpdate: TAccountMetas[2];
+    switchboardFeed: TAccountMetas[2];
     authority: TAccountMetas[3];
   };
   data: OptionValidateInstructionData;
@@ -247,7 +248,7 @@ export function parseOptionValidateInstruction<
     accounts: {
       optionAccount: getNextAccount(),
       marketData: getNextAccount(),
-      priceUpdate: getNextAccount(),
+      switchboardFeed: getNextAccount(),
       authority: getNextAccount(),
     },
     data: getOptionValidateInstructionDataDecoder().decode(instruction.data),

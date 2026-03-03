@@ -93,7 +93,7 @@ export type OptionMintInstruction<
   TAccountEscrowAuthority extends string | AccountMeta<string> = string,
   TAccountEscrowTokenAccount extends string | AccountMeta<string> = string,
   TAccountPoolLoan extends string | AccountMeta<string> = string,
-  TAccountPriceUpdate extends string | AccountMeta<string> = string,
+  TAccountSwitchboardFeed extends string | AccountMeta<string> = string,
   TAccountMaker extends string | AccountMeta<string> = string,
   TAccountTokenProgram extends string | AccountMeta<string> =
     "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
@@ -182,9 +182,9 @@ export type OptionMintInstruction<
       TAccountPoolLoan extends string
         ? WritableAccount<TAccountPoolLoan>
         : TAccountPoolLoan,
-      TAccountPriceUpdate extends string
-        ? ReadonlyAccount<TAccountPriceUpdate>
-        : TAccountPriceUpdate,
+      TAccountSwitchboardFeed extends string
+        ? ReadonlyAccount<TAccountSwitchboardFeed>
+        : TAccountSwitchboardFeed,
       TAccountMaker extends string
         ? WritableSignerAccount<TAccountMaker> &
             AccountSignerMeta<TAccountMaker>
@@ -307,7 +307,7 @@ export type OptionMintAsyncInput<
   TAccountEscrowAuthority extends string = string,
   TAccountEscrowTokenAccount extends string = string,
   TAccountPoolLoan extends string = string,
-  TAccountPriceUpdate extends string = string,
+  TAccountSwitchboardFeed extends string = string,
   TAccountMaker extends string = string,
   TAccountTokenProgram extends string = string,
   TAccountAssociatedTokenProgram extends string = string,
@@ -373,11 +373,7 @@ export type OptionMintAsyncInput<
   escrowTokenAccount?: Address<TAccountEscrowTokenAccount>;
   /** Pool loan account (optional - only required if borrowing) */
   poolLoan?: Address<TAccountPoolLoan>;
-  /**
-   * Pyth price update account for collateral calculation
-   * Required to convert USD collateral requirement to token units
-   */
-  priceUpdate: Address<TAccountPriceUpdate>;
+  switchboardFeed: Address<TAccountSwitchboardFeed>;
   maker: TransactionSigner<TAccountMaker>;
   tokenProgram?: Address<TAccountTokenProgram>;
   associatedTokenProgram?: Address<TAccountAssociatedTokenProgram>;
@@ -420,7 +416,7 @@ export async function getOptionMintInstructionAsync<
   TAccountEscrowAuthority extends string,
   TAccountEscrowTokenAccount extends string,
   TAccountPoolLoan extends string,
-  TAccountPriceUpdate extends string,
+  TAccountSwitchboardFeed extends string,
   TAccountMaker extends string,
   TAccountTokenProgram extends string,
   TAccountAssociatedTokenProgram extends string,
@@ -454,7 +450,7 @@ export async function getOptionMintInstructionAsync<
     TAccountEscrowAuthority,
     TAccountEscrowTokenAccount,
     TAccountPoolLoan,
-    TAccountPriceUpdate,
+    TAccountSwitchboardFeed,
     TAccountMaker,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
@@ -490,7 +486,7 @@ export async function getOptionMintInstructionAsync<
     TAccountEscrowAuthority,
     TAccountEscrowTokenAccount,
     TAccountPoolLoan,
-    TAccountPriceUpdate,
+    TAccountSwitchboardFeed,
     TAccountMaker,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
@@ -556,7 +552,10 @@ export async function getOptionMintInstructionAsync<
       isWritable: true,
     },
     poolLoan: { value: input.poolLoan ?? null, isWritable: true },
-    priceUpdate: { value: input.priceUpdate ?? null, isWritable: false },
+    switchboardFeed: {
+      value: input.switchboardFeed ?? null,
+      isWritable: false,
+    },
     maker: { value: input.maker ?? null, isWritable: true },
     tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
     associatedTokenProgram: {
@@ -819,7 +818,7 @@ export async function getOptionMintInstructionAsync<
       getAccountMeta(accounts.escrowAuthority),
       getAccountMeta(accounts.escrowTokenAccount),
       getAccountMeta(accounts.poolLoan),
-      getAccountMeta(accounts.priceUpdate),
+      getAccountMeta(accounts.switchboardFeed),
       getAccountMeta(accounts.maker),
       getAccountMeta(accounts.tokenProgram),
       getAccountMeta(accounts.associatedTokenProgram),
@@ -857,7 +856,7 @@ export async function getOptionMintInstructionAsync<
     TAccountEscrowAuthority,
     TAccountEscrowTokenAccount,
     TAccountPoolLoan,
-    TAccountPriceUpdate,
+    TAccountSwitchboardFeed,
     TAccountMaker,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
@@ -892,7 +891,7 @@ export type OptionMintInput<
   TAccountEscrowAuthority extends string = string,
   TAccountEscrowTokenAccount extends string = string,
   TAccountPoolLoan extends string = string,
-  TAccountPriceUpdate extends string = string,
+  TAccountSwitchboardFeed extends string = string,
   TAccountMaker extends string = string,
   TAccountTokenProgram extends string = string,
   TAccountAssociatedTokenProgram extends string = string,
@@ -958,11 +957,7 @@ export type OptionMintInput<
   escrowTokenAccount?: Address<TAccountEscrowTokenAccount>;
   /** Pool loan account (optional - only required if borrowing) */
   poolLoan?: Address<TAccountPoolLoan>;
-  /**
-   * Pyth price update account for collateral calculation
-   * Required to convert USD collateral requirement to token units
-   */
-  priceUpdate: Address<TAccountPriceUpdate>;
+  switchboardFeed: Address<TAccountSwitchboardFeed>;
   maker: TransactionSigner<TAccountMaker>;
   tokenProgram?: Address<TAccountTokenProgram>;
   associatedTokenProgram?: Address<TAccountAssociatedTokenProgram>;
@@ -1005,7 +1000,7 @@ export function getOptionMintInstruction<
   TAccountEscrowAuthority extends string,
   TAccountEscrowTokenAccount extends string,
   TAccountPoolLoan extends string,
-  TAccountPriceUpdate extends string,
+  TAccountSwitchboardFeed extends string,
   TAccountMaker extends string,
   TAccountTokenProgram extends string,
   TAccountAssociatedTokenProgram extends string,
@@ -1039,7 +1034,7 @@ export function getOptionMintInstruction<
     TAccountEscrowAuthority,
     TAccountEscrowTokenAccount,
     TAccountPoolLoan,
-    TAccountPriceUpdate,
+    TAccountSwitchboardFeed,
     TAccountMaker,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
@@ -1074,7 +1069,7 @@ export function getOptionMintInstruction<
   TAccountEscrowAuthority,
   TAccountEscrowTokenAccount,
   TAccountPoolLoan,
-  TAccountPriceUpdate,
+  TAccountSwitchboardFeed,
   TAccountMaker,
   TAccountTokenProgram,
   TAccountAssociatedTokenProgram,
@@ -1139,7 +1134,10 @@ export function getOptionMintInstruction<
       isWritable: true,
     },
     poolLoan: { value: input.poolLoan ?? null, isWritable: true },
-    priceUpdate: { value: input.priceUpdate ?? null, isWritable: false },
+    switchboardFeed: {
+      value: input.switchboardFeed ?? null,
+      isWritable: false,
+    },
     maker: { value: input.maker ?? null, isWritable: true },
     tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
     associatedTokenProgram: {
@@ -1210,7 +1208,7 @@ export function getOptionMintInstruction<
       getAccountMeta(accounts.escrowAuthority),
       getAccountMeta(accounts.escrowTokenAccount),
       getAccountMeta(accounts.poolLoan),
-      getAccountMeta(accounts.priceUpdate),
+      getAccountMeta(accounts.switchboardFeed),
       getAccountMeta(accounts.maker),
       getAccountMeta(accounts.tokenProgram),
       getAccountMeta(accounts.associatedTokenProgram),
@@ -1248,7 +1246,7 @@ export function getOptionMintInstruction<
     TAccountEscrowAuthority,
     TAccountEscrowTokenAccount,
     TAccountPoolLoan,
-    TAccountPriceUpdate,
+    TAccountSwitchboardFeed,
     TAccountMaker,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
@@ -1322,11 +1320,7 @@ export type ParsedOptionMintInstruction<
     escrowTokenAccount?: TAccountMetas[22] | undefined;
     /** Pool loan account (optional - only required if borrowing) */
     poolLoan?: TAccountMetas[23] | undefined;
-    /**
-     * Pyth price update account for collateral calculation
-     * Required to convert USD collateral requirement to token units
-     */
-    priceUpdate: TAccountMetas[24];
+    switchboardFeed: TAccountMetas[24];
     maker: TAccountMetas[25];
     tokenProgram: TAccountMetas[26];
     associatedTokenProgram: TAccountMetas[27];
@@ -1388,7 +1382,7 @@ export function parseOptionMintInstruction<
       escrowAuthority: getNextOptionalAccount(),
       escrowTokenAccount: getNextOptionalAccount(),
       poolLoan: getNextOptionalAccount(),
-      priceUpdate: getNextAccount(),
+      switchboardFeed: getNextAccount(),
       maker: getNextAccount(),
       tokenProgram: getNextAccount(),
       associatedTokenProgram: getNextAccount(),

@@ -61,12 +61,22 @@ Additional modules:
 | `buildUnwindWriterUnsoldTransactionWithDerivation` | Builds unwind unsold transaction. |
 | `buildUnwindWriterUnsoldWithLoanRepayment` | **Unwind + repay pool loans in one tx.** Use when closing unsold shorts that borrowed from OMLP. |
 | `buildSyncWriterPositionTransaction` | Syncs writer position with pool accumulators. |
-| `buildSettleMakerCollateralTransaction` | Settles maker collateral after buyer closes. |
+| `buildSettleMakerCollateralTransaction` | Settles maker collateral after buyer closes (repays principal + accrued interest to OMLP from collateral vault first, then returns remainder to maker). |
 | `buildCloseOptionTransaction` | Closes option token account. |
 | `buildClaimThetaTransaction` | Claims theta (time-decay share) for writer. |
 | `buildRepayPoolLoanFromCollateralInstruction` | Repays pool loan from collateral (short/pool). |
 | `buildRepayPoolLoanInstruction` | Repays pool loan with external funds (short/pool). |
 | `buildRepayPoolLoanFromWalletInstruction` | Repays pool loan from maker's wallet (stuck loan recovery). |
+
+### Seller Close Signers
+
+- `buildUnwindWriterUnsoldWithLoanRepayment` / `buildUnwindWriterUnsoldTransactionWithDerivation`
+  - Requires `writer` transaction signer.
+  - On-chain transfers for lender repayment and collateral return are authorized by program PDAs (`collateral_pool` / `option_pool`) where applicable.
+- `buildSettleMakerCollateralTransaction`
+  - No maker transaction signer is required by this instruction format.
+  - On-chain repayment (`collateral_vault` -> `omlp_vault`) and maker return are signed by the `collateral_pool` PDA.
+  - Lender repayment is sourced from collateral vault funds, not maker wallet funds.
 
 ### OMLP (Lending)
 
@@ -273,7 +283,8 @@ const tx = await buildBuyFromPoolMarketOrderTransactionWithDerivation({
   expirationDate: BigInt(1735689600),
   buyer: walletAddress,
   buyerPaymentAccount: buyerUsdcAta,
-  priceUpdate: pythPriceFeed,
+  // optional: override feed account if you do not want SDK derivation from market data
+  switchboardFeed: switchboardFeedAddress,
   quantity: 1_000_000,
   quotedPremiumTotal: 50_000,
   slippageBufferBaseUnits: 500_000n,
@@ -311,7 +322,7 @@ Check these first:
 
 - `buyer_position` account shape/size (`146` bytes expected).
 - `market_data` account shape/size (`128` bytes expected).
-- `priceUpdate` is a valid Pyth Receiver `PriceUpdateV2` account.
+- `switchboardFeed` points to the configured Switchboard pull feed account for the market (or omit it and let derivation builders resolve from `market_data.switchboard_feed_id`).
 - Account list/order matches the generated instruction layout.
 
 This is different from liquidity failures (`6042/6043`) and should be debugged as an account wiring/layout issue.
@@ -319,8 +330,22 @@ This is different from liquidity failures (`6042/6043`) and should be debugged a
 ### Oracle inputs (asset-agnostic)
 
 - Keep oracle handling universal across assets.
-- Provide `priceUpdate` for the selected underlying and allow program-side validation against `market_data.pyth_feed_id`.
+- Use the market-configured `switchboard_feed_id` as source-of-truth and pass `switchboardFeed` when using low-level builders.
 - Avoid hardcoding a single feed/account address in shared SDK integration flows.
+
+### Price update freshness (required for accurate payouts)
+
+The program uses the **Switchboard pull feed account** you pass in (or that the SDK derives) to read the current underlying price for:
+
+- **Buy:** Premium computation (Black-Scholes).
+- **Close:** Payout computation (mark-to-market). If the price is stale, the close payout will not reflect the current option value; the buyer may receive back only their premium instead of profit.
+
+**You must ensure the Switchboard feed is recently updated** when building buy and close transactions. The SDK does not post oracle updates by default; use the Switchboard helper exports and your update pipeline before trading instructions.
+
+- **Mainnet:** keep feed updates fresh enough to satisfy the feed's configured `max_staleness`.
+- **Devnet:** ensure your keeper/update pipeline runs before user trade flows; payouts reflect the feed's staleness config.
+
+**Fallback policy:** Switchboard-configured markets are strict Switchboard reads. Legacy Pyth helpers remain in the codebase for compatibility, but primary trade paths use Switchboard feed accounts.
 
 ### Unwind with loan repayment
 

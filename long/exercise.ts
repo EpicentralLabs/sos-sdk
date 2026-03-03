@@ -8,7 +8,7 @@ export interface BuildOptionExerciseParams {
   positionAccount: AddressLike;
   marketData: AddressLike;
   underlyingMint: AddressLike;
-  priceUpdate: AddressLike;
+  switchboardFeed: AddressLike;
   buyerPaymentAccount: AddressLike;
   makerCollateralAccount: AddressLike;
   escrowState: AddressLike;
@@ -30,7 +30,7 @@ export function buildOptionExerciseInstruction(
     positionAccount: toAddress(params.positionAccount),
     marketData: toAddress(params.marketData),
     underlyingMint: toAddress(params.underlyingMint),
-    priceUpdate: toAddress(params.priceUpdate),
+    switchboardFeed: toAddress(params.switchboardFeed),
     buyerPaymentAccount: toAddress(params.buyerPaymentAccount),
     makerCollateralAccount: toAddress(params.makerCollateralAccount),
     escrowState: toAddress(params.escrowState),

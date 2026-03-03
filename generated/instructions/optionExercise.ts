@@ -55,7 +55,7 @@ export type OptionExerciseInstruction<
   TAccountPositionAccount extends string | AccountMeta<string> = string,
   TAccountMarketData extends string | AccountMeta<string> = string,
   TAccountUnderlyingMint extends string | AccountMeta<string> = string,
-  TAccountPriceUpdate extends string | AccountMeta<string> = string,
+  TAccountSwitchboardFeed extends string | AccountMeta<string> = string,
   TAccountBuyerPaymentAccount extends string | AccountMeta<string> = string,
   TAccountMakerCollateralAccount extends string | AccountMeta<string> = string,
   TAccountEscrowState extends string | AccountMeta<string> = string,
@@ -81,9 +81,9 @@ export type OptionExerciseInstruction<
       TAccountUnderlyingMint extends string
         ? ReadonlyAccount<TAccountUnderlyingMint>
         : TAccountUnderlyingMint,
-      TAccountPriceUpdate extends string
-        ? ReadonlyAccount<TAccountPriceUpdate>
-        : TAccountPriceUpdate,
+      TAccountSwitchboardFeed extends string
+        ? ReadonlyAccount<TAccountSwitchboardFeed>
+        : TAccountSwitchboardFeed,
       TAccountBuyerPaymentAccount extends string
         ? WritableAccount<TAccountBuyerPaymentAccount>
         : TAccountBuyerPaymentAccount,
@@ -144,7 +144,7 @@ export type OptionExerciseAsyncInput<
   TAccountPositionAccount extends string = string,
   TAccountMarketData extends string = string,
   TAccountUnderlyingMint extends string = string,
-  TAccountPriceUpdate extends string = string,
+  TAccountSwitchboardFeed extends string = string,
   TAccountBuyerPaymentAccount extends string = string,
   TAccountMakerCollateralAccount extends string = string,
   TAccountEscrowState extends string = string,
@@ -159,8 +159,7 @@ export type OptionExerciseAsyncInput<
   marketData: Address<TAccountMarketData>;
   /** Underlying token mint (for dynamic decimal handling - supports any SPL token) */
   underlyingMint: Address<TAccountUnderlyingMint>;
-  /** Pyth price update account (ownership validated by Anchor) */
-  priceUpdate: Address<TAccountPriceUpdate>;
+  switchboardFeed: Address<TAccountSwitchboardFeed>;
   buyerPaymentAccount: Address<TAccountBuyerPaymentAccount>;
   makerCollateralAccount: Address<TAccountMakerCollateralAccount>;
   /**
@@ -180,7 +179,7 @@ export async function getOptionExerciseInstructionAsync<
   TAccountPositionAccount extends string,
   TAccountMarketData extends string,
   TAccountUnderlyingMint extends string,
-  TAccountPriceUpdate extends string,
+  TAccountSwitchboardFeed extends string,
   TAccountBuyerPaymentAccount extends string,
   TAccountMakerCollateralAccount extends string,
   TAccountEscrowState extends string,
@@ -195,7 +194,7 @@ export async function getOptionExerciseInstructionAsync<
     TAccountPositionAccount,
     TAccountMarketData,
     TAccountUnderlyingMint,
-    TAccountPriceUpdate,
+    TAccountSwitchboardFeed,
     TAccountBuyerPaymentAccount,
     TAccountMakerCollateralAccount,
     TAccountEscrowState,
@@ -212,7 +211,7 @@ export async function getOptionExerciseInstructionAsync<
     TAccountPositionAccount,
     TAccountMarketData,
     TAccountUnderlyingMint,
-    TAccountPriceUpdate,
+    TAccountSwitchboardFeed,
     TAccountBuyerPaymentAccount,
     TAccountMakerCollateralAccount,
     TAccountEscrowState,
@@ -232,7 +231,10 @@ export async function getOptionExerciseInstructionAsync<
     positionAccount: { value: input.positionAccount ?? null, isWritable: true },
     marketData: { value: input.marketData ?? null, isWritable: false },
     underlyingMint: { value: input.underlyingMint ?? null, isWritable: false },
-    priceUpdate: { value: input.priceUpdate ?? null, isWritable: false },
+    switchboardFeed: {
+      value: input.switchboardFeed ?? null,
+      isWritable: false,
+    },
     buyerPaymentAccount: {
       value: input.buyerPaymentAccount ?? null,
       isWritable: true,
@@ -285,7 +287,7 @@ export async function getOptionExerciseInstructionAsync<
       getAccountMeta(accounts.positionAccount),
       getAccountMeta(accounts.marketData),
       getAccountMeta(accounts.underlyingMint),
-      getAccountMeta(accounts.priceUpdate),
+      getAccountMeta(accounts.switchboardFeed),
       getAccountMeta(accounts.buyerPaymentAccount),
       getAccountMeta(accounts.makerCollateralAccount),
       getAccountMeta(accounts.escrowState),
@@ -302,7 +304,7 @@ export async function getOptionExerciseInstructionAsync<
     TAccountPositionAccount,
     TAccountMarketData,
     TAccountUnderlyingMint,
-    TAccountPriceUpdate,
+    TAccountSwitchboardFeed,
     TAccountBuyerPaymentAccount,
     TAccountMakerCollateralAccount,
     TAccountEscrowState,
@@ -318,7 +320,7 @@ export type OptionExerciseInput<
   TAccountPositionAccount extends string = string,
   TAccountMarketData extends string = string,
   TAccountUnderlyingMint extends string = string,
-  TAccountPriceUpdate extends string = string,
+  TAccountSwitchboardFeed extends string = string,
   TAccountBuyerPaymentAccount extends string = string,
   TAccountMakerCollateralAccount extends string = string,
   TAccountEscrowState extends string = string,
@@ -333,8 +335,7 @@ export type OptionExerciseInput<
   marketData: Address<TAccountMarketData>;
   /** Underlying token mint (for dynamic decimal handling - supports any SPL token) */
   underlyingMint: Address<TAccountUnderlyingMint>;
-  /** Pyth price update account (ownership validated by Anchor) */
-  priceUpdate: Address<TAccountPriceUpdate>;
+  switchboardFeed: Address<TAccountSwitchboardFeed>;
   buyerPaymentAccount: Address<TAccountBuyerPaymentAccount>;
   makerCollateralAccount: Address<TAccountMakerCollateralAccount>;
   /**
@@ -354,7 +355,7 @@ export function getOptionExerciseInstruction<
   TAccountPositionAccount extends string,
   TAccountMarketData extends string,
   TAccountUnderlyingMint extends string,
-  TAccountPriceUpdate extends string,
+  TAccountSwitchboardFeed extends string,
   TAccountBuyerPaymentAccount extends string,
   TAccountMakerCollateralAccount extends string,
   TAccountEscrowState extends string,
@@ -369,7 +370,7 @@ export function getOptionExerciseInstruction<
     TAccountPositionAccount,
     TAccountMarketData,
     TAccountUnderlyingMint,
-    TAccountPriceUpdate,
+    TAccountSwitchboardFeed,
     TAccountBuyerPaymentAccount,
     TAccountMakerCollateralAccount,
     TAccountEscrowState,
@@ -385,7 +386,7 @@ export function getOptionExerciseInstruction<
   TAccountPositionAccount,
   TAccountMarketData,
   TAccountUnderlyingMint,
-  TAccountPriceUpdate,
+  TAccountSwitchboardFeed,
   TAccountBuyerPaymentAccount,
   TAccountMakerCollateralAccount,
   TAccountEscrowState,
@@ -404,7 +405,10 @@ export function getOptionExerciseInstruction<
     positionAccount: { value: input.positionAccount ?? null, isWritable: true },
     marketData: { value: input.marketData ?? null, isWritable: false },
     underlyingMint: { value: input.underlyingMint ?? null, isWritable: false },
-    priceUpdate: { value: input.priceUpdate ?? null, isWritable: false },
+    switchboardFeed: {
+      value: input.switchboardFeed ?? null,
+      isWritable: false,
+    },
     buyerPaymentAccount: {
       value: input.buyerPaymentAccount ?? null,
       isWritable: true,
@@ -443,7 +447,7 @@ export function getOptionExerciseInstruction<
       getAccountMeta(accounts.positionAccount),
       getAccountMeta(accounts.marketData),
       getAccountMeta(accounts.underlyingMint),
-      getAccountMeta(accounts.priceUpdate),
+      getAccountMeta(accounts.switchboardFeed),
       getAccountMeta(accounts.buyerPaymentAccount),
       getAccountMeta(accounts.makerCollateralAccount),
       getAccountMeta(accounts.escrowState),
@@ -460,7 +464,7 @@ export function getOptionExerciseInstruction<
     TAccountPositionAccount,
     TAccountMarketData,
     TAccountUnderlyingMint,
-    TAccountPriceUpdate,
+    TAccountSwitchboardFeed,
     TAccountBuyerPaymentAccount,
     TAccountMakerCollateralAccount,
     TAccountEscrowState,
@@ -483,8 +487,7 @@ export type ParsedOptionExerciseInstruction<
     marketData: TAccountMetas[2];
     /** Underlying token mint (for dynamic decimal handling - supports any SPL token) */
     underlyingMint: TAccountMetas[3];
-    /** Pyth price update account (ownership validated by Anchor) */
-    priceUpdate: TAccountMetas[4];
+    switchboardFeed: TAccountMetas[4];
     buyerPaymentAccount: TAccountMetas[5];
     makerCollateralAccount: TAccountMetas[6];
     /**
@@ -526,7 +529,7 @@ export function parseOptionExerciseInstruction<
       positionAccount: getNextAccount(),
       marketData: getNextAccount(),
       underlyingMint: getNextAccount(),
-      priceUpdate: getNextAccount(),
+      switchboardFeed: getNextAccount(),
       buyerPaymentAccount: getNextAccount(),
       makerCollateralAccount: getNextAccount(),
       escrowState: getNextAccount(),

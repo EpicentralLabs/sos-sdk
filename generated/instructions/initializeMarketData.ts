@@ -84,13 +84,13 @@ export type InitializeMarketDataInstructionData = {
   discriminator: ReadonlyUint8Array;
   riskFreeRate: number;
   historicalVolatility: number;
-  pythFeedId: ReadonlyUint8Array;
+  switchboardFeedId: ReadonlyUint8Array;
 };
 
 export type InitializeMarketDataInstructionDataArgs = {
   riskFreeRate: number;
   historicalVolatility: number;
-  pythFeedId: ReadonlyUint8Array;
+  switchboardFeedId: ReadonlyUint8Array;
 };
 
 export function getInitializeMarketDataInstructionDataEncoder(): FixedSizeEncoder<InitializeMarketDataInstructionDataArgs> {
@@ -99,7 +99,7 @@ export function getInitializeMarketDataInstructionDataEncoder(): FixedSizeEncode
       ["discriminator", fixEncoderSize(getBytesEncoder(), 8)],
       ["riskFreeRate", getF64Encoder()],
       ["historicalVolatility", getF64Encoder()],
-      ["pythFeedId", fixEncoderSize(getBytesEncoder(), 32)],
+      ["switchboardFeedId", fixEncoderSize(getBytesEncoder(), 32)],
     ]),
     (value) => ({
       ...value,
@@ -113,7 +113,7 @@ export function getInitializeMarketDataInstructionDataDecoder(): FixedSizeDecode
     ["discriminator", fixDecoderSize(getBytesDecoder(), 8)],
     ["riskFreeRate", getF64Decoder()],
     ["historicalVolatility", getF64Decoder()],
-    ["pythFeedId", fixDecoderSize(getBytesDecoder(), 32)],
+    ["switchboardFeedId", fixDecoderSize(getBytesDecoder(), 32)],
   ]);
 }
 
@@ -139,7 +139,7 @@ export type InitializeMarketDataAsyncInput<
   systemProgram?: Address<TAccountSystemProgram>;
   riskFreeRate: InitializeMarketDataInstructionDataArgs["riskFreeRate"];
   historicalVolatility: InitializeMarketDataInstructionDataArgs["historicalVolatility"];
-  pythFeedId: InitializeMarketDataInstructionDataArgs["pythFeedId"];
+  switchboardFeedId: InitializeMarketDataInstructionDataArgs["switchboardFeedId"];
 };
 
 export async function getInitializeMarketDataInstructionAsync<
@@ -239,7 +239,7 @@ export type InitializeMarketDataInput<
   systemProgram?: Address<TAccountSystemProgram>;
   riskFreeRate: InitializeMarketDataInstructionDataArgs["riskFreeRate"];
   historicalVolatility: InitializeMarketDataInstructionDataArgs["historicalVolatility"];
-  pythFeedId: InitializeMarketDataInstructionDataArgs["pythFeedId"];
+  switchboardFeedId: InitializeMarketDataInstructionDataArgs["switchboardFeedId"];
 };
 
 export function getInitializeMarketDataInstruction<

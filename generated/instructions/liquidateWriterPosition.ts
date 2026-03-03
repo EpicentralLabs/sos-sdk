@@ -60,7 +60,7 @@ export type LiquidateWriterPositionInstruction<
   TAccountOmlpVault extends string | AccountMeta<string> = string,
   TAccountUnderlyingMint extends string | AccountMeta<string> = string,
   TAccountMarketData extends string | AccountMeta<string> = string,
-  TAccountPriceUpdate extends string | AccountMeta<string> = string,
+  TAccountSwitchboardFeed extends string | AccountMeta<string> = string,
   TAccountCollateralVault extends string | AccountMeta<string> = string,
   TAccountOmlpVaultTokenAccount extends string | AccountMeta<string> = string,
   TAccountFeeWallet extends string | AccountMeta<string> = string,
@@ -101,9 +101,9 @@ export type LiquidateWriterPositionInstruction<
       TAccountMarketData extends string
         ? ReadonlyAccount<TAccountMarketData>
         : TAccountMarketData,
-      TAccountPriceUpdate extends string
-        ? ReadonlyAccount<TAccountPriceUpdate>
-        : TAccountPriceUpdate,
+      TAccountSwitchboardFeed extends string
+        ? ReadonlyAccount<TAccountSwitchboardFeed>
+        : TAccountSwitchboardFeed,
       TAccountCollateralVault extends string
         ? WritableAccount<TAccountCollateralVault>
         : TAccountCollateralVault,
@@ -169,7 +169,7 @@ export type LiquidateWriterPositionAsyncInput<
   TAccountOmlpVault extends string = string,
   TAccountUnderlyingMint extends string = string,
   TAccountMarketData extends string = string,
-  TAccountPriceUpdate extends string = string,
+  TAccountSwitchboardFeed extends string = string,
   TAccountCollateralVault extends string = string,
   TAccountOmlpVaultTokenAccount extends string = string,
   TAccountFeeWallet extends string = string,
@@ -193,10 +193,9 @@ export type LiquidateWriterPositionAsyncInput<
   omlpVault: Address<TAccountOmlpVault>;
   /** Underlying token mint (for decimal handling) */
   underlyingMint: Address<TAccountUnderlyingMint>;
-  /** Market data account (provides pyth_feed_id for price check) */
+  /** Market data account (provides switchboard_feed_id for price check) */
   marketData: Address<TAccountMarketData>;
-  /** Pyth price update account for current underlying price */
-  priceUpdate: Address<TAccountPriceUpdate>;
+  switchboardFeed: Address<TAccountSwitchboardFeed>;
   /** Collateral vault (source of repayments) */
   collateralVault: Address<TAccountCollateralVault>;
   /** OMLP vault token account (receives loan repayments) */
@@ -219,7 +218,7 @@ export async function getLiquidateWriterPositionInstructionAsync<
   TAccountOmlpVault extends string,
   TAccountUnderlyingMint extends string,
   TAccountMarketData extends string,
-  TAccountPriceUpdate extends string,
+  TAccountSwitchboardFeed extends string,
   TAccountCollateralVault extends string,
   TAccountOmlpVaultTokenAccount extends string,
   TAccountFeeWallet extends string,
@@ -238,7 +237,7 @@ export async function getLiquidateWriterPositionInstructionAsync<
     TAccountOmlpVault,
     TAccountUnderlyingMint,
     TAccountMarketData,
-    TAccountPriceUpdate,
+    TAccountSwitchboardFeed,
     TAccountCollateralVault,
     TAccountOmlpVaultTokenAccount,
     TAccountFeeWallet,
@@ -259,7 +258,7 @@ export async function getLiquidateWriterPositionInstructionAsync<
     TAccountOmlpVault,
     TAccountUnderlyingMint,
     TAccountMarketData,
-    TAccountPriceUpdate,
+    TAccountSwitchboardFeed,
     TAccountCollateralVault,
     TAccountOmlpVaultTokenAccount,
     TAccountFeeWallet,
@@ -286,7 +285,10 @@ export async function getLiquidateWriterPositionInstructionAsync<
     omlpVault: { value: input.omlpVault ?? null, isWritable: true },
     underlyingMint: { value: input.underlyingMint ?? null, isWritable: false },
     marketData: { value: input.marketData ?? null, isWritable: false },
-    priceUpdate: { value: input.priceUpdate ?? null, isWritable: false },
+    switchboardFeed: {
+      value: input.switchboardFeed ?? null,
+      isWritable: false,
+    },
     collateralVault: { value: input.collateralVault ?? null, isWritable: true },
     omlpVaultTokenAccount: {
       value: input.omlpVaultTokenAccount ?? null,
@@ -338,7 +340,7 @@ export async function getLiquidateWriterPositionInstructionAsync<
       getAccountMeta(accounts.omlpVault),
       getAccountMeta(accounts.underlyingMint),
       getAccountMeta(accounts.marketData),
-      getAccountMeta(accounts.priceUpdate),
+      getAccountMeta(accounts.switchboardFeed),
       getAccountMeta(accounts.collateralVault),
       getAccountMeta(accounts.omlpVaultTokenAccount),
       getAccountMeta(accounts.feeWallet),
@@ -359,7 +361,7 @@ export async function getLiquidateWriterPositionInstructionAsync<
     TAccountOmlpVault,
     TAccountUnderlyingMint,
     TAccountMarketData,
-    TAccountPriceUpdate,
+    TAccountSwitchboardFeed,
     TAccountCollateralVault,
     TAccountOmlpVaultTokenAccount,
     TAccountFeeWallet,
@@ -379,7 +381,7 @@ export type LiquidateWriterPositionInput<
   TAccountOmlpVault extends string = string,
   TAccountUnderlyingMint extends string = string,
   TAccountMarketData extends string = string,
-  TAccountPriceUpdate extends string = string,
+  TAccountSwitchboardFeed extends string = string,
   TAccountCollateralVault extends string = string,
   TAccountOmlpVaultTokenAccount extends string = string,
   TAccountFeeWallet extends string = string,
@@ -403,10 +405,9 @@ export type LiquidateWriterPositionInput<
   omlpVault: Address<TAccountOmlpVault>;
   /** Underlying token mint (for decimal handling) */
   underlyingMint: Address<TAccountUnderlyingMint>;
-  /** Market data account (provides pyth_feed_id for price check) */
+  /** Market data account (provides switchboard_feed_id for price check) */
   marketData: Address<TAccountMarketData>;
-  /** Pyth price update account for current underlying price */
-  priceUpdate: Address<TAccountPriceUpdate>;
+  switchboardFeed: Address<TAccountSwitchboardFeed>;
   /** Collateral vault (source of repayments) */
   collateralVault: Address<TAccountCollateralVault>;
   /** OMLP vault token account (receives loan repayments) */
@@ -429,7 +430,7 @@ export function getLiquidateWriterPositionInstruction<
   TAccountOmlpVault extends string,
   TAccountUnderlyingMint extends string,
   TAccountMarketData extends string,
-  TAccountPriceUpdate extends string,
+  TAccountSwitchboardFeed extends string,
   TAccountCollateralVault extends string,
   TAccountOmlpVaultTokenAccount extends string,
   TAccountFeeWallet extends string,
@@ -448,7 +449,7 @@ export function getLiquidateWriterPositionInstruction<
     TAccountOmlpVault,
     TAccountUnderlyingMint,
     TAccountMarketData,
-    TAccountPriceUpdate,
+    TAccountSwitchboardFeed,
     TAccountCollateralVault,
     TAccountOmlpVaultTokenAccount,
     TAccountFeeWallet,
@@ -468,7 +469,7 @@ export function getLiquidateWriterPositionInstruction<
   TAccountOmlpVault,
   TAccountUnderlyingMint,
   TAccountMarketData,
-  TAccountPriceUpdate,
+  TAccountSwitchboardFeed,
   TAccountCollateralVault,
   TAccountOmlpVaultTokenAccount,
   TAccountFeeWallet,
@@ -494,7 +495,10 @@ export function getLiquidateWriterPositionInstruction<
     omlpVault: { value: input.omlpVault ?? null, isWritable: true },
     underlyingMint: { value: input.underlyingMint ?? null, isWritable: false },
     marketData: { value: input.marketData ?? null, isWritable: false },
-    priceUpdate: { value: input.priceUpdate ?? null, isWritable: false },
+    switchboardFeed: {
+      value: input.switchboardFeed ?? null,
+      isWritable: false,
+    },
     collateralVault: { value: input.collateralVault ?? null, isWritable: true },
     omlpVaultTokenAccount: {
       value: input.omlpVaultTokenAccount ?? null,
@@ -532,7 +536,7 @@ export function getLiquidateWriterPositionInstruction<
       getAccountMeta(accounts.omlpVault),
       getAccountMeta(accounts.underlyingMint),
       getAccountMeta(accounts.marketData),
-      getAccountMeta(accounts.priceUpdate),
+      getAccountMeta(accounts.switchboardFeed),
       getAccountMeta(accounts.collateralVault),
       getAccountMeta(accounts.omlpVaultTokenAccount),
       getAccountMeta(accounts.feeWallet),
@@ -553,7 +557,7 @@ export function getLiquidateWriterPositionInstruction<
     TAccountOmlpVault,
     TAccountUnderlyingMint,
     TAccountMarketData,
-    TAccountPriceUpdate,
+    TAccountSwitchboardFeed,
     TAccountCollateralVault,
     TAccountOmlpVaultTokenAccount,
     TAccountFeeWallet,
@@ -585,10 +589,9 @@ export type ParsedLiquidateWriterPositionInstruction<
     omlpVault: TAccountMetas[6];
     /** Underlying token mint (for decimal handling) */
     underlyingMint: TAccountMetas[7];
-    /** Market data account (provides pyth_feed_id for price check) */
+    /** Market data account (provides switchboard_feed_id for price check) */
     marketData: TAccountMetas[8];
-    /** Pyth price update account for current underlying price */
-    priceUpdate: TAccountMetas[9];
+    switchboardFeed: TAccountMetas[9];
     /** Collateral vault (source of repayments) */
     collateralVault: TAccountMetas[10];
     /** OMLP vault token account (receives loan repayments) */
@@ -633,7 +636,7 @@ export function parseLiquidateWriterPositionInstruction<
       omlpVault: getNextAccount(),
       underlyingMint: getNextAccount(),
       marketData: getNextAccount(),
-      priceUpdate: getNextAccount(),
+      switchboardFeed: getNextAccount(),
       collateralVault: getNextAccount(),
       omlpVaultTokenAccount: getNextAccount(),
       feeWallet: getNextAccount(),
