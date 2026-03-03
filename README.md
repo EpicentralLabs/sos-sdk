@@ -50,14 +50,14 @@ Additional modules:
 | `buildBuyFromPoolMarketOrderTransactionWithDerivation` | High-level market-order buy builder (refetches pool + remaining accounts, applies premium cap buffer). |
 | `buildBuyFromPoolTransactionWithDerivation` | Builds buy-from-pool transaction; resolves accounts from option identity. |
 | `preflightBuyFromPoolMarketOrder` | Buy preflight helper for liquidity + remaining-account coverage checks. |
-| `buildCloseLongToPoolTransactionWithDerivation` | Builds close-long-to-pool transaction. |
+| `buildCloseLongToPoolTransactionWithDerivation` | Builds close-long-to-pool transaction; by default appends CloseAccount for buyer LONG ATA and unwraps WSOL payout when underlying is SOL. |
 | `getBuyFromPoolRemainingAccounts` | Builds remaining_accounts for buy (writer positions, etc.). |
 
 ### Short (Writer) Flows
 
 | Function | Description |
 |----------|-------------|
-| `buildOptionMintTransactionWithDerivation` | Builds option mint (write) transaction. Supports multi-collateral: use `collateralMint` to back positions with any supported asset (USDC, BTC, SOL, etc.). |
+| `buildOptionMintTransactionWithDerivation` | Builds option mint (write) transaction. By default appends CloseAccount for the maker's LONG token account after mint (reclaim rent). Supports multi-collateral: use `collateralMint` to back positions with any supported asset (USDC, BTC, SOL, etc.). |
 | `buildUnwindWriterUnsoldTransactionWithDerivation` | Builds unwind unsold transaction. |
 | `buildUnwindWriterUnsoldWithLoanRepayment` | **Unwind + repay pool loans in one tx.** Use when closing unsold shorts that borrowed from OMLP. |
 | `buildSyncWriterPositionTransaction` | Syncs writer position with pool accumulators. |
@@ -73,11 +73,28 @@ Additional modules:
 | Function | Description |
 |----------|-------------|
 | `buildDepositToPositionTransaction` | Deposits liquidity to OMLP. |
-| `buildWithdrawFromPositionTransaction` | Withdraws liquidity. |
-| `withdrawAllFromPosition` | Withdraws full position (omlp/service). |
-| `withdrawInterestFromPosition` | Withdraws accrued interest only (omlp/service). |
+| `buildWithdrawFromPositionTransaction` | Withdraws liquidity; supports optional same-tx WSOL unwrap via `unwrapSol` + `vaultMint`. |
+| `withdrawAllFromPosition` | Withdraws full position (principal + proportional interest, including pending index accrual, capped by pool liquidity). |
+| `withdrawInterestFromPosition` | Withdraws interest only (realized + pending index accrual, capped by pool liquidity). |
 
 Borrow/repay for writers: use `buildOptionMintTransactionWithDerivation` (with vault/poolLoan) and `buildRepayPoolLoanFromCollateralInstruction` or `buildUnwindWriterUnsoldWithLoanRepayment`.
+
+### Token account closing (option mint and close long)
+
+- **Option mint (seller/writer):** After `option_mint`, all LONG tokens go to the pool escrow; the maker's LONG ATA is left with zero balance. The SDK **automatically appends an SPL CloseAccount instruction** (when `closeMakerLongAccount` is not set to `false`) so the maker reclaims rent. Use `buildOptionMintTransaction` or `buildOptionMintTransactionWithDerivation`; pass `closeMakerLongAccount: false` to skip closing the LONG ATA.
+- **Close long (buyer):** When the buyer closes or exercises early via `close_long_to_pool`, LONG tokens are returned to the pool and payout is sent to the buyer's payout ATA. The SDK can:
+  - **Close the buyer's LONG token account** after the close instruction so rent is reclaimed. Use `closeLongTokenAccount: true` (default for `buildCloseLongToPoolTransactionWithDerivation`); set to `false` for **partial** closes (the LONG ATA still holds remaining tokens).
+  - **Unwrap WSOL payout** when the option underlying is SOL: append CloseAccount on the payout ATA so the buyer receives native SOL. Use `unwrapPayoutSol: true` (default for WSOL in the derivation builder); set to `false` to keep payout as WSOL.
+
+### OMLP withdraw behavior
+
+- Interest is allocated proportionally via the vault interest-per-share index.
+- On-chain `withdraw_from_position` syncs pending interest before transferring funds, so a lender withdrawal automatically includes their proportional earned interest when available.
+- `withdrawAllFromPosition` and `withdrawInterestFromPosition` compute pending interest from `accInterestPerShareFp` and `interestIndexSnapshotFp`, then cap by `poolAvailable = totalLiquidity - totalLoans`.
+- Optional WSOL unwrap in the same transaction:
+  - Set `unwrapSol: true` and provide `vaultMint`.
+  - If `vaultMint === NATIVE_MINT`, SDK appends a `CloseAccount` after withdraw to unwrap WSOL ATA to native SOL.
+  - For non-WSOL mints, the same builder remains token-agnostic and does not append unwrap instructions.
 
 ### WSOL / Token Helpers
 

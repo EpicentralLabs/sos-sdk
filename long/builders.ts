@@ -17,7 +17,11 @@ import {
   type RemainingAccountInput,
 } from "../shared/remaining-accounts";
 import type { OptionType } from "../generated/types";
-import { getCreateAssociatedTokenIdempotentInstructionWithAddress, NATIVE_MINT } from "../wsol/instructions";
+import {
+  getCloseAccountInstruction,
+  getCreateAssociatedTokenIdempotentInstructionWithAddress,
+  NATIVE_MINT,
+} from "../wsol/instructions";
 import { fetchOptionPool } from "../accounts/fetchers";
 import { getBuyFromPoolRemainingAccounts } from "./remaining-accounts";
 import { fetchWriterPositionsForPool } from "../accounts/list";
@@ -58,6 +62,16 @@ export interface BuildCloseLongToPoolParams {
   minPayoutAmount: bigint | number;
   buyerPosition?: AddressLike;
   omlpVault?: AddressLike;
+  /**
+   * When true, appends an SPL CloseAccount to close the buyer's LONG token account after close_long_to_pool (reclaim rent).
+   * Set to true only when closing the entire position; for partial closes the LONG ATA still holds remaining tokens.
+   */
+  closeLongTokenAccount?: boolean;
+  /**
+   * When true and underlying is WSOL, appends an SPL CloseAccount to unwrap the payout ATA so the buyer receives native SOL.
+   * Ignored when underlyingMint is not WSOL.
+   */
+  unwrapPayoutSol?: boolean;
   remainingAccounts?: RemainingAccountInput[];
 }
 
@@ -347,7 +361,32 @@ export async function buildCloseLongToPoolTransaction(
   params: BuildCloseLongToPoolParams
 ): Promise<BuiltTransaction> {
   const instruction = await buildCloseLongToPoolInstruction(params);
-  return { instructions: [instruction] };
+  const instructions = [instruction];
+
+  if (params.closeLongTokenAccount === true) {
+    instructions.push(
+      getCloseAccountInstruction(
+        params.buyerLongAccount,
+        params.buyer,
+        params.buyer
+      )
+    );
+  }
+
+  const shouldUnwrapPayout =
+    params.unwrapPayoutSol === true &&
+    toAddress(params.underlyingMint) === toAddress(NATIVE_MINT);
+  if (shouldUnwrapPayout) {
+    instructions.push(
+      getCloseAccountInstruction(
+        params.buyerPayoutAccount,
+        params.buyer,
+        params.buyer
+      )
+    );
+  }
+
+  return { instructions };
 }
 
 export interface BuildCloseLongToPoolTransactionWithDerivationParams {
@@ -365,6 +404,16 @@ export interface BuildCloseLongToPoolTransactionWithDerivationParams {
   programId?: AddressLike;
   buyerPosition?: AddressLike;
   omlpVault?: AddressLike;
+  /**
+   * When true (default), appends CloseAccount for the buyer's LONG token account after close_long_to_pool.
+   * Set to false when doing a partial close (LONG ATA still holds remaining tokens).
+   */
+  closeLongTokenAccount?: boolean;
+  /**
+   * When true (default for WSOL underlying), appends CloseAccount to unwrap payout WSOL ATA to native SOL.
+   * Only applies when option underlying is WSOL.
+   */
+  unwrapPayoutSol?: boolean;
   remainingAccounts?: RemainingAccountInput[];
 }
 
@@ -396,6 +445,13 @@ export async function buildCloseLongToPoolTransactionWithDerivation(
         params.programId
       ))[0];
 
+  const isWsolUnderlying =
+    toAddress(resolved.underlyingMint!) === toAddress(NATIVE_MINT);
+  const closeLongTokenAccount =
+    params.closeLongTokenAccount !== false;
+  const unwrapPayoutSol =
+    params.unwrapPayoutSol !== false && isWsolUnderlying;
+
   return buildCloseLongToPoolTransaction({
     optionPool: resolved.optionPool,
     optionAccount: resolved.optionAccount,
@@ -414,6 +470,8 @@ export async function buildCloseLongToPoolTransactionWithDerivation(
     minPayoutAmount: params.minPayoutAmount,
     buyerPosition,
     omlpVault: params.omlpVault,
+    closeLongTokenAccount,
+    unwrapPayoutSol,
     remainingAccounts: params.remainingAccounts,
   });
 }

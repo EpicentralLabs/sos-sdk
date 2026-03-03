@@ -6,6 +6,7 @@ import type { Instruction } from "@solana/kit";
 import { toAddress } from "../client/program";
 import type { AddressLike, BuiltTransaction } from "../client/types";
 import { assertPositiveAmount } from "../shared/amounts";
+import { getCloseAccountInstruction, NATIVE_MINT } from "../wsol/instructions";
 
 export interface BuildDepositToPositionParams {
   vault: AddressLike;
@@ -23,6 +24,8 @@ export interface BuildWithdrawFromPositionParams {
   lender: AddressLike;
   amount: bigint | number;
   position?: AddressLike;
+  unwrapSol?: boolean;
+  vaultMint?: AddressLike;
 }
 
 export async function buildDepositToPositionInstruction(
@@ -69,6 +72,23 @@ export async function buildWithdrawFromPositionInstruction(
 export async function buildWithdrawFromPositionTransaction(
   params: BuildWithdrawFromPositionParams
 ): Promise<BuiltTransaction> {
-  const instruction = await buildWithdrawFromPositionInstruction(params);
-  return { instructions: [instruction] };
+  const withdrawInstruction = await buildWithdrawFromPositionInstruction(params);
+  const instructions: Instruction<string>[] = [withdrawInstruction];
+
+  const shouldUnwrapSol =
+    params.unwrapSol === true &&
+    params.vaultMint !== undefined &&
+    toAddress(params.vaultMint) === toAddress(NATIVE_MINT);
+
+  if (shouldUnwrapSol) {
+    instructions.push(
+      getCloseAccountInstruction(
+        params.lenderTokenAccount,
+        params.lender,
+        params.lender
+      )
+    );
+  }
+
+  return { instructions };
 }

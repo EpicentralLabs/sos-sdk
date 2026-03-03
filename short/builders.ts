@@ -25,6 +25,7 @@ import {
   type RemainingAccountInput,
 } from "../shared/remaining-accounts";
 import {
+  getCloseAccountInstruction,
   NATIVE_MINT,
   getCreateAssociatedTokenIdempotentInstructionWithAddress,
   getWrapSOLInstructions,
@@ -75,6 +76,12 @@ export interface BuildOptionMintParams {
   escrowAuthority?: AddressLike;
   escrowTokenAccount?: AddressLike;
   poolLoan?: AddressLike;
+  /**
+   * When true (default), appends an SPL CloseAccount instruction after option_mint to close the
+   * maker's LONG token account (reclaim rent). The program transfers all LONG to escrow, so the
+   * maker's LONG ATA is left with zero balance and can be closed in the same transaction.
+   */
+  closeMakerLongAccount?: boolean;
   remainingAccounts?: RemainingAccountInput[];
 }
 
@@ -213,7 +220,21 @@ export async function buildOptionMintTransaction(
   params: BuildOptionMintParams
 ): Promise<BuiltTransaction> {
   const instruction = await buildOptionMintInstruction(params);
-  return { instructions: [instruction] };
+  const instructions: Instruction<string>[] = [instruction];
+
+  const shouldCloseMakerLong =
+    params.closeMakerLongAccount !== false && params.makerLongAccount != null;
+  if (shouldCloseMakerLong) {
+    instructions.push(
+      getCloseAccountInstruction(
+        params.makerLongAccount!,
+        params.maker,
+        params.maker
+      )
+    );
+  }
+
+  return { instructions };
 }
 
 export interface BuildOptionMintTransactionWithDerivationParams {

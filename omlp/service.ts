@@ -12,8 +12,23 @@ import {
   type BuildWithdrawFromPositionParams,
 } from "./builders";
 
+const INTEREST_FP_SCALE = 1_000_000_000_000n;
+
 function positiveDiff(a: bigint, b: bigint): bigint {
   return a > b ? a - b : 0n;
+}
+
+function calculatePendingInterest(
+  deposited: bigint,
+  vaultAccInterestPerShareFp: bigint,
+  positionInterestIndexSnapshotFp: bigint
+): bigint {
+  const deltaFp = positiveDiff(
+    vaultAccInterestPerShareFp,
+    positionInterestIndexSnapshotFp
+  );
+
+  return (deposited * deltaFp) / INTEREST_FP_SCALE;
 }
 
 export async function depositToPosition(
@@ -50,14 +65,23 @@ export async function withdrawAllFromPosition(
     position.totalInterestEarned,
     position.interestClaimed
   );
-  const userMax = position.deposited + unclaimedInterest;
+  const pendingInterest = calculatePendingInterest(
+    position.deposited,
+    vault.accInterestPerShareFp,
+    position.interestIndexSnapshotFp
+  );
+  const userMax = position.deposited + unclaimedInterest + pendingInterest;
   const poolAvailable = positiveDiff(vault.totalLiquidity, vault.totalLoans);
   const amount = userMax < poolAvailable ? userMax : poolAvailable;
   if (amount <= 0n) {
     throw new Error("No withdrawable balance available right now.");
   }
 
-  const built = await buildWithdrawFromPositionTransaction({ ...params, amount });
+  const built = await buildWithdrawFromPositionTransaction({
+    ...params,
+    amount,
+    vaultMint: vault.mint,
+  });
   return { instructions: built.instructions, amount };
 }
 
@@ -83,13 +107,26 @@ export async function withdrawInterestFromPosition(
     position.totalInterestEarned,
     position.interestClaimed
   );
+  const pendingInterest = calculatePendingInterest(
+    position.deposited,
+    vault.accInterestPerShareFp,
+    position.interestIndexSnapshotFp
+  );
+  const totalClaimableInterest = unclaimedInterest + pendingInterest;
   const poolAvailable = positiveDiff(vault.totalLiquidity, vault.totalLoans);
-  const amount = unclaimedInterest < poolAvailable ? unclaimedInterest : poolAvailable;
+  const amount =
+    totalClaimableInterest < poolAvailable
+      ? totalClaimableInterest
+      : poolAvailable;
   if (amount <= 0n) {
     throw new Error("No claimable interest available right now.");
   }
 
-  const built = await buildWithdrawFromPositionTransaction({ ...params, amount });
+  const built = await buildWithdrawFromPositionTransaction({
+    ...params,
+    amount,
+    vaultMint: vault.mint,
+  });
   return { instructions: built.instructions, amount };
 }
 
