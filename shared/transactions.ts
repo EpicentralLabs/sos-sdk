@@ -21,6 +21,10 @@ import {
 import type { Instruction } from "@solana/kit";
 import { toAddress } from "../client/program";
 import type { AddressLike, BuiltTransaction, KitRpc } from "../client/types";
+import {
+  getLookupTableAddressForNetwork,
+  type LookupTableNetwork,
+} from "../client/lookup-table";
 
 export interface SendBuiltTransactionParams extends BuiltTransaction {
   rpc: KitRpc;
@@ -29,7 +33,18 @@ export interface SendBuiltTransactionParams extends BuiltTransaction {
   commitment?: "processed" | "confirmed" | "finalized";
   computeUnitLimit?: number;
   computeUnitPriceMicroLamports?: number;
+  /**
+   * Address Lookup Table addresses to compress the transaction.
+   * REQUIRED for option_mint and other large transactions to avoid
+   * "encoding overruns Uint8Array" (Solana's 1232-byte tx limit).
+   * Use getLookupTableAddressForNetwork(network) or pass network to auto-include.
+   */
   addressLookupTableAddresses?: AddressLike[];
+  /**
+   * When set, automatically includes the option program's lookup table for this network.
+   * Use this when sending option_mint, buy_from_pool, or other large transactions.
+   */
+  network?: LookupTableNetwork;
 }
 
 /**
@@ -58,6 +73,15 @@ export async function sendBuiltTransaction(
   }
   const allInstructions = [...computeBudgetInstructions, ...params.instructions];
 
+  // Resolve address lookup tables: explicit list, or from network for option program
+  let addressLookupTableAddresses = params.addressLookupTableAddresses ?? [];
+  if (params.network) {
+    const programAlt = getLookupTableAddressForNetwork(params.network);
+    if (programAlt && !addressLookupTableAddresses.some((a) => String(a) === String(programAlt))) {
+      addressLookupTableAddresses = [programAlt, ...addressLookupTableAddresses];
+    }
+  }
+
   let txMessage = pipe(
     createTransactionMessage({ version: 0 }),
     (tx) => setTransactionMessageFeePayerSigner(params.feePayer, tx),
@@ -65,12 +89,9 @@ export async function sendBuiltTransaction(
     (tx) => appendTransactionMessageInstructions(allInstructions, tx)
   );
 
-  if (
-    params.addressLookupTableAddresses &&
-    params.addressLookupTableAddresses.length > 0
-  ) {
+  if (addressLookupTableAddresses.length > 0) {
     const addressesByAddressLookupTable: AddressesByLookupTableAddress = {};
-    for (const altAddress of params.addressLookupTableAddresses) {
+    for (const altAddress of addressLookupTableAddresses) {
       const resolvedAddress = toAddress(altAddress);
       const { data } = await fetchAddressLookupTable(params.rpc, resolvedAddress);
       addressesByAddressLookupTable[resolvedAddress] = data.addresses;

@@ -89,6 +89,22 @@ Additional modules:
 
 Borrow/repay for writers: use `buildOptionMintTransactionWithDerivation` (with vault/poolLoan) and `buildRepayPoolLoanFromCollateralInstruction` or `buildUnwindWriterUnsoldWithLoanRepayment`.
 
+### Transaction size and Address Lookup Tables
+
+Option mint (and buy/close) transactions exceed Solana's 1232-byte limit without compression. If you see **"encoding overruns Uint8Array"** when minting, pass `network` to `sendBuiltTransaction`:
+
+```ts
+await sendBuiltTransaction({
+  instructions: tx.instructions,
+  rpc,
+  rpcSubscriptions,
+  feePayer: walletSigner,
+  network: "devnet",  // or "mainnet" — auto-includes lookup table when configured
+});
+```
+
+Or pass `addressLookupTableAddresses: [getLookupTableAddressForNetwork("devnet")]` when non-null. Mainnet lookup table is `null` by default; create one via `yarn update:lookuptable` for mainnet.
+
 ### Token account closing (option mint and close long)
 
 - **Option mint (seller/writer):** After `option_mint`, all LONG tokens go to the pool escrow; the maker's LONG ATA is left with zero balance. The SDK **automatically appends an SPL CloseAccount instruction** (when `closeMakerLongAccount` is not set to `false`) so the maker reclaims rent. Use `buildOptionMintTransaction` or `buildOptionMintTransactionWithDerivation`; pass `closeMakerLongAccount: false` to skip closing the LONG ATA.

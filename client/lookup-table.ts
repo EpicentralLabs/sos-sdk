@@ -10,7 +10,9 @@ export const LOOKUP_TABLE_ADDRESSES: Record<"devnet" | "mainnet", Address | null
 
 export const LOOKUP_TABLE_ADDRESS: Address | null = LOOKUP_TABLE_ADDRESSES.devnet;
 
-export function detectNetwork(rpcUrl: string): "devnet" | "mainnet" {
+export type LookupTableNetwork = "devnet" | "mainnet";
+
+export function detectNetwork(rpcUrl: string): LookupTableNetwork {
   const lower = rpcUrl.toLowerCase();
   return lower.includes("mainnet") ? "mainnet" : "devnet";
 }
