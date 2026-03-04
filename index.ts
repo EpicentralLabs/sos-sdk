@@ -30,7 +30,12 @@ export * from "./short/preflight";
 
 export * from "./omlp/builders";
 export * from "./omlp/service";
-export * from "./oracle/switchboard";
+export {
+  resolveSwitchboardFeedFromMarketData,
+  buildSwitchboardPullFeedUpdate,
+  type SwitchboardPullFeedLike,
+  type BuildSwitchboardPullFeedUpdateParams,
+} from "./oracle/switchboard";
 
 export {
   getWrapSOLInstructions,

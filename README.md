@@ -115,6 +115,15 @@ Borrow/repay for writers: use `buildOptionMintTransactionWithDerivation` (with v
 | `getCreateAssociatedTokenIdempotentInstructionWithAddress` | Creates ATA if missing (idempotent). |
 | `NATIVE_MINT` | WSOL mint address. |
 
+### Oracle / Switchboard
+
+| Function | Description |
+|----------|-------------|
+| `resolveSwitchboardFeedFromMarketData` | Resolves Switchboard feed address from market data account. |
+| `buildSwitchboardPullFeedUpdate` | Builds Switchboard pull-feed update instructions for prepending to trade transactions. |
+
+See [Frontend Switchboard Integration](../../docs/FRONTEND_SWITCHBOARD_INTEGRATION.md) for full setup and usage.
+
 ## Multi-Collateral Settlement
 
 The SDK supports universal multi-collateral settlement, allowing writers to use ANY supported asset as collateral for options (not just the underlying). This enables:
