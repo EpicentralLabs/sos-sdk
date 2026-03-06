@@ -31,6 +31,7 @@ import {
   type ParsedInitOptionPoolInstruction,
   type ParsedLiquidateWriterPositionInstruction,
   type ParsedOmlpCreateVaultInstruction,
+  type ParsedOmlpUpdateMaxBorrowCapInstruction,
   type ParsedOmlpUpdateMaxLeverageInstruction,
   type ParsedOmlpUpdateProtocolFeeInstruction,
   type ParsedOmlpUpdateSupplyLimitInstruction,
@@ -51,7 +52,7 @@ import {
 } from "../instructions";
 
 export const OPTION_PROGRAM_PROGRAM_ADDRESS =
-  "ASTGCefQVGEQ79ZSC6d2G9oMqmn2dk1onb4N75Bc5djQ" as Address<"ASTGCefQVGEQ79ZSC6d2G9oMqmn2dk1onb4N75Bc5djQ">;
+  "CCigZRDDjYiJCRL3FfkG3LbNYBpYaG6mGRiYGQnct1co" as Address<"CCigZRDDjYiJCRL3FfkG3LbNYBpYaG6mGRiYGQnct1co">;
 
 export enum OptionProgramAccount {
   CollateralPool,
@@ -227,6 +228,7 @@ export enum OptionProgramInstruction {
   InitializeMarketData,
   LiquidateWriterPosition,
   OmlpCreateVault,
+  OmlpUpdateMaxBorrowCap,
   OmlpUpdateMaxLeverage,
   OmlpUpdateProtocolFee,
   OmlpUpdateSupplyLimit,
@@ -441,6 +443,17 @@ export function identifyOptionProgramInstruction(
     containsBytes(
       data,
       fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([156, 196, 135, 28, 127, 162, 101, 52]),
+      ),
+      0,
+    )
+  ) {
+    return OptionProgramInstruction.OmlpUpdateMaxBorrowCap;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
         new Uint8Array([108, 142, 71, 44, 21, 120, 202, 28]),
       ),
       0,
@@ -630,7 +643,7 @@ export function identifyOptionProgramInstruction(
 }
 
 export type ParsedOptionProgramInstruction<
-  TProgram extends string = "ASTGCefQVGEQ79ZSC6d2G9oMqmn2dk1onb4N75Bc5djQ",
+  TProgram extends string = "CCigZRDDjYiJCRL3FfkG3LbNYBpYaG6mGRiYGQnct1co",
 > =
   | ({
       instructionType: OptionProgramInstruction.AcceptAdmin;
@@ -683,6 +696,9 @@ export type ParsedOptionProgramInstruction<
   | ({
       instructionType: OptionProgramInstruction.OmlpCreateVault;
     } & ParsedOmlpCreateVaultInstruction<TProgram>)
+  | ({
+      instructionType: OptionProgramInstruction.OmlpUpdateMaxBorrowCap;
+    } & ParsedOmlpUpdateMaxBorrowCapInstruction<TProgram>)
   | ({
       instructionType: OptionProgramInstruction.OmlpUpdateMaxLeverage;
     } & ParsedOmlpUpdateMaxLeverageInstruction<TProgram>)

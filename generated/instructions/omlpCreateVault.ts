@@ -107,6 +107,7 @@ export type OmlpCreateVaultInstruction<
 export type OmlpCreateVaultInstructionData = {
   discriminator: ReadonlyUint8Array;
   liqThresholdBps: number;
+  maxBorrowCapBps: number;
   maxLeverageMultiplier: number;
   baseRateBps: number;
   optimalUtilizationBps: number;
@@ -117,6 +118,7 @@ export type OmlpCreateVaultInstructionData = {
 
 export type OmlpCreateVaultInstructionDataArgs = {
   liqThresholdBps: number;
+  maxBorrowCapBps: number;
   maxLeverageMultiplier: number;
   baseRateBps: number;
   optimalUtilizationBps: number;
@@ -130,6 +132,7 @@ export function getOmlpCreateVaultInstructionDataEncoder(): FixedSizeEncoder<Oml
     getStructEncoder([
       ["discriminator", fixEncoderSize(getBytesEncoder(), 8)],
       ["liqThresholdBps", getU16Encoder()],
+      ["maxBorrowCapBps", getU16Encoder()],
       ["maxLeverageMultiplier", getU16Encoder()],
       ["baseRateBps", getU16Encoder()],
       ["optimalUtilizationBps", getU16Encoder()],
@@ -145,6 +148,7 @@ export function getOmlpCreateVaultInstructionDataDecoder(): FixedSizeDecoder<Oml
   return getStructDecoder([
     ["discriminator", fixDecoderSize(getBytesDecoder(), 8)],
     ["liqThresholdBps", getU16Decoder()],
+    ["maxBorrowCapBps", getU16Decoder()],
     ["maxLeverageMultiplier", getU16Decoder()],
     ["baseRateBps", getU16Decoder()],
     ["optimalUtilizationBps", getU16Decoder()],
@@ -189,6 +193,7 @@ export type OmlpCreateVaultAsyncInput<
   associatedTokenProgram?: Address<TAccountAssociatedTokenProgram>;
   systemProgram?: Address<TAccountSystemProgram>;
   liqThresholdBps: OmlpCreateVaultInstructionDataArgs["liqThresholdBps"];
+  maxBorrowCapBps: OmlpCreateVaultInstructionDataArgs["maxBorrowCapBps"];
   maxLeverageMultiplier: OmlpCreateVaultInstructionDataArgs["maxLeverageMultiplier"];
   baseRateBps: OmlpCreateVaultInstructionDataArgs["baseRateBps"];
   optimalUtilizationBps: OmlpCreateVaultInstructionDataArgs["optimalUtilizationBps"];
@@ -369,6 +374,7 @@ export type OmlpCreateVaultInput<
   associatedTokenProgram?: Address<TAccountAssociatedTokenProgram>;
   systemProgram?: Address<TAccountSystemProgram>;
   liqThresholdBps: OmlpCreateVaultInstructionDataArgs["liqThresholdBps"];
+  maxBorrowCapBps: OmlpCreateVaultInstructionDataArgs["maxBorrowCapBps"];
   maxLeverageMultiplier: OmlpCreateVaultInstructionDataArgs["maxLeverageMultiplier"];
   baseRateBps: OmlpCreateVaultInstructionDataArgs["baseRateBps"];
   optimalUtilizationBps: OmlpCreateVaultInstructionDataArgs["optimalUtilizationBps"];

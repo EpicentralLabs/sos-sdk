@@ -219,6 +219,7 @@ export type OptionMintInstructionData = {
   collateralMint: Address;
   makerCollateralAmount: bigint;
   borrowedAmount: bigint;
+  maxRequiredCollateralAmount: bigint;
 };
 
 export type OptionMintInstructionDataArgs = {
@@ -231,6 +232,7 @@ export type OptionMintInstructionDataArgs = {
   collateralMint: Address;
   makerCollateralAmount: number | bigint;
   borrowedAmount: number | bigint;
+  maxRequiredCollateralAmount: number | bigint;
 };
 
 export function getOptionMintInstructionDataEncoder(): Encoder<OptionMintInstructionDataArgs> {
@@ -249,6 +251,7 @@ export function getOptionMintInstructionDataEncoder(): Encoder<OptionMintInstruc
       ["collateralMint", getAddressEncoder()],
       ["makerCollateralAmount", getU64Encoder()],
       ["borrowedAmount", getU64Encoder()],
+      ["maxRequiredCollateralAmount", getU64Encoder()],
     ]),
     (value) => ({ ...value, discriminator: OPTION_MINT_DISCRIMINATOR }),
   );
@@ -269,6 +272,7 @@ export function getOptionMintInstructionDataDecoder(): Decoder<OptionMintInstruc
     ["collateralMint", getAddressDecoder()],
     ["makerCollateralAmount", getU64Decoder()],
     ["borrowedAmount", getU64Decoder()],
+    ["maxRequiredCollateralAmount", getU64Decoder()],
   ]);
 }
 
@@ -389,6 +393,7 @@ export type OptionMintAsyncInput<
   collateralMintArg: OptionMintInstructionDataArgs["collateralMint"];
   makerCollateralAmount: OptionMintInstructionDataArgs["makerCollateralAmount"];
   borrowedAmount: OptionMintInstructionDataArgs["borrowedAmount"];
+  maxRequiredCollateralAmount: OptionMintInstructionDataArgs["maxRequiredCollateralAmount"];
 };
 
 export async function getOptionMintInstructionAsync<
@@ -973,6 +978,7 @@ export type OptionMintInput<
   collateralMintArg: OptionMintInstructionDataArgs["collateralMint"];
   makerCollateralAmount: OptionMintInstructionDataArgs["makerCollateralAmount"];
   borrowedAmount: OptionMintInstructionDataArgs["borrowedAmount"];
+  maxRequiredCollateralAmount: OptionMintInstructionDataArgs["maxRequiredCollateralAmount"];
 };
 
 export function getOptionMintInstruction<

@@ -1,7 +1,11 @@
 import { getOptionExerciseInstruction } from "../generated/instructions";
 import type { Instruction } from "@solana/kit";
 import { toAddress } from "../client/program";
-import type { AddressLike, BuiltTransaction } from "../client/types";
+import type { AddressLike, BuiltTransaction, KitRpc } from "../client/types";
+import {
+  buildSwitchboardCrank,
+  prependSwitchboardCrank,
+} from "../oracle/switchboard";
 
 export interface BuildOptionExerciseParams {
   optionAccount: AddressLike;
@@ -16,6 +20,10 @@ export interface BuildOptionExerciseParams {
   escrowAuthority: AddressLike;
   buyer: AddressLike;
   tokenProgram?: AddressLike;
+  rpc?: KitRpc;
+  disableSwitchboardCrank?: boolean;
+  switchboardCrossbarUrl?: string;
+  switchboardNumSignatures?: number;
 }
 
 /**
@@ -48,7 +56,18 @@ export function buildOptionExerciseInstruction(
  */
 export function buildOptionExerciseTransaction(
   params: BuildOptionExerciseParams
-): BuiltTransaction {
+): Promise<BuiltTransaction> {
   const instruction = buildOptionExerciseInstruction(params);
-  return { instructions: [instruction] };
+  const actionTx = { instructions: [instruction] };
+  if (params.disableSwitchboardCrank || !params.rpc) {
+    return Promise.resolve(actionTx);
+  }
+
+  return buildSwitchboardCrank({
+    rpc: params.rpc,
+    payer: params.buyer,
+    switchboardFeed: params.switchboardFeed,
+    crossbarUrl: params.switchboardCrossbarUrl,
+    numSignatures: params.switchboardNumSignatures,
+  }).then((crank) => prependSwitchboardCrank(crank, actionTx));
 }

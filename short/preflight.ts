@@ -87,6 +87,8 @@ export interface UnwindPreflightSummary {
 
 export interface UnwindPreflightResult {
   canUnwind: boolean;
+  canRepayRequestedSlice: boolean;
+  /** @deprecated Use canRepayRequestedSlice. */
   canRepayFully: boolean;
   reason?: string;
   writerPositionAddress: string;
@@ -145,6 +147,7 @@ export async function preflightUnwindWriterUnsold(
   if (unwindQty <= 0n) {
     return {
       canUnwind: false,
+      canRepayRequestedSlice: false,
       canRepayFully: false,
       reason: "unwindQty must be > 0",
       writerPositionAddress: String(writerPositionAddress),
@@ -178,6 +181,7 @@ export async function preflightUnwindWriterUnsold(
   if (unwindQty > unsoldQty) {
     return {
       canUnwind: false,
+      canRepayRequestedSlice: false,
       canRepayFully: false,
       reason: "unwindQty exceeds writer unsold quantity",
       writerPositionAddress: String(writerPositionAddress),
@@ -211,7 +215,7 @@ export async function preflightUnwindWriterUnsold(
 
   const slotNow = toBigInt(currentSlot);
   const protocolFeeBps = BigInt(vault.protocolFeeBps);
-  const slotsPerYear = 63_072_000n;
+  const slotsPerYear = 78_840_000n;
   const loanBreakdown: Array<UnwindLoanBreakdown> = [];
 
   for (const loan of loans) {
@@ -267,20 +271,20 @@ export async function preflightUnwindWriterUnsold(
 
   // Calculate proportional obligations for partial unwinds
   const writtenQty = toBigInt(writerPosition.writtenQty);
-  const unwindRatio = writtenQty > 0n ? (unwindQty * 1_000_000n) / writtenQty : 0n; // Basis points precision
-  const unwindRatioDecimal = Number(unwindRatio) / 1_000_000; // Convert to decimal
-
-  // Proportional obligations (for partial unwind logic)
   const proportionalPrincipal = writtenQty > 0n ? (totals.principal * unwindQty) / writtenQty : 0n;
   const proportionalInterest = writtenQty > 0n ? (totals.interest * unwindQty) / writtenQty : 0n;
   const proportionalProtocolFees = writtenQty > 0n ? (totals.fees * unwindQty) / writtenQty : 0n;
   const proportionalTotalOwed = proportionalPrincipal + proportionalInterest + proportionalProtocolFees;
 
-  // Collateral return calculation (proportional share minus proportional obligations)
+  // On-chain unwind repays from collateral vault first, then optional wallet fallback.
+  // The collateral share returned to the writer is therefore reduced only by the
+  // amount actually sourced from the collateral vault, not by the entire debt slice.
   const collateralDeposited = toBigInt(writerPosition.collateralDeposited);
   const proportionalCollateralShare = writtenQty > 0n ? (collateralDeposited * unwindQty) / writtenQty : 0n;
-  const returnableCollateral = proportionalCollateralShare > proportionalTotalOwed
-    ? proportionalCollateralShare - proportionalTotalOwed
+  const collateralUsedForRepay =
+    proportionalTotalOwed > collateralVaultAvailable ? collateralVaultAvailable : proportionalTotalOwed;
+  const returnableCollateral = proportionalCollateralShare > collateralUsedForRepay
+    ? proportionalCollateralShare - collateralUsedForRepay
     : 0n;
 
   // Calculate shortfall against proportional obligations
@@ -295,14 +299,13 @@ export async function preflightUnwindWriterUnsold(
   const effectiveShortfall =
     proportionalTotalOwed > effectiveTotalAvailable ? proportionalTotalOwed - effectiveTotalAvailable : 0n;
 
-  // For top-up UX: explicit collateral vault shortfall
-  const collateralVaultShortfall = returnableCollateral > collateralVaultAvailable
-    ? returnableCollateral - collateralVaultAvailable
-    : 0n;
-  const needsWalletTopUp = collateralVaultShortfall > 0n && walletFallbackAvailable < collateralVaultShortfall;
+  // For top-up UX, surface the wallet contribution required after collateral-vault-first repayment.
+  const collateralVaultShortfall = walletFallbackRequired;
+  const needsWalletTopUp = walletFallbackRequired > walletFallbackAvailable;
 
   return {
     canUnwind: true,
+    canRepayRequestedSlice: effectiveShortfall === 0n,
     canRepayFully: effectiveShortfall === 0n,
     reason:
       effectiveShortfall === 0n

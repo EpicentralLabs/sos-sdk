@@ -30,11 +30,18 @@ export * from "./short/preflight";
 
 export * from "./omlp/builders";
 export * from "./omlp/service";
+export * from "./shared/trade-config";
 export {
   resolveSwitchboardFeedFromMarketData,
   buildSwitchboardPullFeedUpdate,
+  buildSwitchboardCrank,
+  inferSwitchboardNetwork,
+  prependSwitchboardCrank,
   type SwitchboardPullFeedLike,
   type BuildSwitchboardPullFeedUpdateParams,
+  type BuildSwitchboardCrankParams,
+  type SwitchboardCrankResult,
+  type SwitchboardNetwork,
 } from "./oracle/switchboard";
 
 export {

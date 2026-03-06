@@ -31,6 +31,12 @@ import {
   getWrapSOLInstructions,
 } from "../wsol/instructions";
 import { preflightUnwindWriterUnsold } from "./preflight";
+import {
+  buildSwitchboardCrank,
+  prependSwitchboardCrank,
+} from "../oracle/switchboard";
+import { applySlippageBps } from "../long/quotes";
+import { getGlobalTradeConfig } from "../shared/trade-config";
 import bs58 from "bs58";
 
 export interface BuildOptionMintParams {
@@ -48,6 +54,7 @@ export interface BuildOptionMintParams {
   collateralMint?: AddressLike;
   makerCollateralAmount: bigint | number;
   borrowedAmount: bigint | number;
+  maxRequiredCollateralAmount?: bigint | number;
   maker: AddressLike;
   makerCollateralAccount: AddressLike;
   underlyingMint: AddressLike;
@@ -133,6 +140,16 @@ export async function buildOptionMintInstruction(
   invariant(params.underlyingSymbol.length > 0, "underlyingSymbol is required.");
 
   const borrowedAmount = BigInt(params.borrowedAmount);
+  const globalTradeConfig = getGlobalTradeConfig();
+  const maxRequiredCollateralAmount =
+    params.maxRequiredCollateralAmount !== undefined
+      ? BigInt(params.maxRequiredCollateralAmount)
+      : globalTradeConfig.slippageBps !== undefined
+        ? applySlippageBps(
+            BigInt(params.makerCollateralAmount) + borrowedAmount,
+            globalTradeConfig.slippageBps
+          )
+        : BigInt(params.makerCollateralAmount) + borrowedAmount;
   if (borrowedAmount > 0n) {
     invariant(!!params.vault, "vault is required when borrowedAmount > 0");
     invariant(
@@ -209,6 +226,7 @@ export async function buildOptionMintInstruction(
     collateralMintArg: toAddress(params.collateralMint ?? params.underlyingMint),
     makerCollateralAmount: params.makerCollateralAmount,
     borrowedAmount: params.borrowedAmount,
+    maxRequiredCollateralAmount,
   });
 
   return appendRemainingAccounts(kitInstruction, params.remainingAccounts);
@@ -251,6 +269,7 @@ export interface BuildOptionMintTransactionWithDerivationParams {
   collateralMint?: AddressLike;
   makerCollateralAmount: bigint | number;
   borrowedAmount: bigint | number;
+  maxRequiredCollateralAmount?: bigint | number;
   maker: AddressLike;
   /**
    * Optional. When omitted, the SDK derives the maker's collateral ATA for collateralMint
@@ -268,6 +287,9 @@ export interface BuildOptionMintTransactionWithDerivationParams {
   escrowTokenAccount?: AddressLike;
   poolLoan?: AddressLike;
   remainingAccounts?: RemainingAccountInput[];
+  disableSwitchboardCrank?: boolean;
+  switchboardCrossbarUrl?: string;
+  switchboardNumSignatures?: number;
 }
 
 export async function buildOptionMintTransactionWithDerivation(
@@ -357,9 +379,23 @@ export async function buildOptionMintTransactionWithDerivation(
       makerCollateralAccount
     );
 
-  return {
+  const actionTx = {
     instructions: [createAtaIx, ...tx.instructions],
   };
+
+  if (params.disableSwitchboardCrank) {
+    return actionTx;
+  }
+
+  const crank = await buildSwitchboardCrank({
+    rpc: params.rpc,
+    payer: params.maker,
+    switchboardFeed,
+    marketData: resolved.marketData,
+    crossbarUrl: params.switchboardCrossbarUrl,
+    numSignatures: params.switchboardNumSignatures,
+  });
+  return prependSwitchboardCrank(crank, actionTx);
 }
 
 export async function buildUnwindWriterUnsoldInstruction(
@@ -480,8 +516,12 @@ export async function buildUnwindWriterUnsoldWithLoanRepayment(
   ]);
 
   const vaultLoans = loans
-    .filter((item) => toAddress(item.data.vault) === vaultPdaStr)
-    .slice(0, MAX_POOL_LOANS_PER_UNWIND);
+    .filter((item) => toAddress(item.data.vault) === vaultPdaStr);
+
+  invariant(
+    vaultLoans.length <= MAX_POOL_LOANS_PER_UNWIND,
+    `Too many active pool loans for unwind: ${vaultLoans.length}. Max supported in one unwind is ${MAX_POOL_LOANS_PER_UNWIND}.`
+  );
 
   const remainingAccounts: RemainingAccountInput[] = vaultLoans.map((item) => ({
     address: item.address,
@@ -515,8 +555,8 @@ export async function buildUnwindWriterUnsoldWithLoanRepayment(
       : 0n;
 
   invariant(
-    preflight.canRepayFully,
-    `Unwind cannot fully repay loans: required=${preflight.summary.proportionalTotalOwed} available_now=${preflight.summary.collateralVaultAvailable + preflight.summary.walletFallbackAvailable} native_sol_available=${preflight.summary.nativeSolAvailable} remaining_shortfall=${preflight.summary.proportionalTotalOwed - (preflight.summary.collateralVaultAvailable + preflight.summary.walletFallbackAvailable + preflight.summary.nativeSolAvailable)}`
+    preflight.canRepayRequestedSlice,
+    `Unwind cannot repay the requested slice: required=${preflight.summary.proportionalTotalOwed} available_now=${preflight.summary.collateralVaultAvailable + preflight.summary.walletFallbackAvailable} native_sol_available=${preflight.summary.nativeSolAvailable} remaining_shortfall=${preflight.summary.proportionalTotalOwed - (preflight.summary.collateralVaultAvailable + preflight.summary.walletFallbackAvailable + preflight.summary.nativeSolAvailable)}`
   );
   if (isWsolPath && lamportsToWrap > 0n && !params.includeWrapForShortfall) {
     invariant(

@@ -112,6 +112,11 @@ export type Vault = {
    */
   supplyLimit: bigint;
   /**
+   * Maximum aggregate borrow cap as a share of total liquidity (basis points).
+   * Example: 9000 = at most 90% of liquidity may be loaned out.
+   */
+  maxBorrowCapBps: number;
+  /**
    * Cumulative interest earned per deposited unit (fixed-point)
    * Increases whenever loans are repaid/liquidated
    */
@@ -178,6 +183,11 @@ export type VaultArgs = {
    */
   supplyLimit: number | bigint;
   /**
+   * Maximum aggregate borrow cap as a share of total liquidity (basis points).
+   * Example: 9000 = at most 90% of liquidity may be loaned out.
+   */
+  maxBorrowCapBps: number;
+  /**
    * Cumulative interest earned per deposited unit (fixed-point)
    * Increases whenever loans are repaid/liquidated
    */
@@ -208,6 +218,7 @@ export function getVaultEncoder(): FixedSizeEncoder<VaultArgs> {
       ["rateSlope1Bps", getU16Encoder()],
       ["rateSlope2Bps", getU16Encoder()],
       ["supplyLimit", getU64Encoder()],
+      ["maxBorrowCapBps", getU16Encoder()],
       ["accInterestPerShareFp", getU128Encoder()],
       ["lastInterestUpdateSlot", getU64Encoder()],
     ]),
@@ -236,6 +247,7 @@ export function getVaultDecoder(): FixedSizeDecoder<Vault> {
     ["rateSlope1Bps", getU16Decoder()],
     ["rateSlope2Bps", getU16Decoder()],
     ["supplyLimit", getU64Decoder()],
+    ["maxBorrowCapBps", getU16Decoder()],
     ["accInterestPerShareFp", getU128Decoder()],
     ["lastInterestUpdateSlot", getU64Decoder()],
   ]);
@@ -300,5 +312,5 @@ export async function fetchAllMaybeVault(
 }
 
 export function getVaultSize(): number {
-  return 191;
+  return 193;
 }

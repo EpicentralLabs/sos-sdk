@@ -136,9 +136,24 @@ Or pass `addressLookupTableAddresses: [getLookupTableAddressForNetwork("devnet")
 | Function | Description |
 |----------|-------------|
 | `resolveSwitchboardFeedFromMarketData` | Resolves Switchboard feed address from market data account. |
-| `buildSwitchboardPullFeedUpdate` | Builds Switchboard pull-feed update instructions for prepending to trade transactions. |
+| `buildSwitchboardPullFeedUpdate` | Low-level helper that fetches Switchboard pull-feed update instructions. |
+| `buildSwitchboardCrank` | Returns Kit-native crank instructions plus lookup tables for the configured feed. |
+| `prependSwitchboardCrank` | Prepends crank instructions/ALTs to a built SDK transaction. |
+
+Price-sensitive option builders and OMLP deposit/withdraw builders now prepend Switchboard crank instructions by default, so frontends can keep using the same Kit transaction pipeline without managing a separate oracle update step.
 
 See [Frontend Switchboard Integration](../../docs/FRONTEND_SWITCHBOARD_INTEGRATION.md) for full setup and usage.
+
+### Global Trade Config
+
+Use the shared trade config helpers to set SDK-wide defaults for slippage and compute-budget settings:
+
+- `setGlobalTradeConfig`
+- `updateGlobalTradeConfig`
+- `getGlobalTradeConfig`
+- `resetGlobalTradeConfig`
+
+These defaults are used by the high-level builders unless an action-specific override is provided. `option_mint` also forwards a max-collateral bound on-chain so signer delays cannot silently widen required collateral past the configured tolerance.
 
 ## Multi-Collateral Settlement
 
@@ -215,7 +230,7 @@ When a writer unwinds an unsold short that had borrowed from the OMLP pool, the 
 **Collateral Return:**
 - Proportional collateral share = `(collateral_deposited * unwind_qty) / written_qty`
 - Returnable collateral = `proportional_share - amount_already_repaid_from_vault`
-- If vault lacks sufficient post-repayment balance, fails with `InsufficientCollateralVault` (6090)
+- If vault lacks sufficient post-repayment balance, fails with `InsufficientCollateralVault` (6092)
 
 Use **`buildUnwindWriterUnsoldWithLoanRepayment`** so that:
 
@@ -232,7 +247,8 @@ Use **`preflightUnwindWriterUnsold`** before building the transaction to get:
 - Collateral-vault available, wallet fallback required, and shortfall.
 - **Top-up UX fields:** `collateralVaultShortfall`, `needsWalletTopUp`.
 - WSOL repay metadata: `solTopUpRequired`, `topUpRequiredForRepay`, `nativeSolAvailable`.
-- `canRepayFully`, which now reflects effective repay solvency (including native SOL top-up capacity for WSOL paths).
+- `canRepayRequestedSlice`, which reflects solvency for the proportional unwind slice (including native SOL top-up capacity for WSOL paths).
+- Deprecated compatibility field: `canRepayFully` mirrors the slice-based result for older callers.
 
 If there are no active pool loans for that vault, the API still works and passes empty `remaining_accounts`.
 
@@ -333,7 +349,7 @@ The program uses distinct error codes for liquidity failures:
 - `InsufficientPoolAggregateLiquidity` (6042) – `option_pool.total_available < quantity`
 - `InsufficientWriterPositionLiquidity` (6043) – remaining writer-position accounts cannot cover full quantity in the smallest-first fill loop
 
-**Ghost Liquidity:** When `total_available` appears sufficient but active writer positions cannot cover the request. This happens when positions are settled/liquidated but still counted in the aggregate. The SDK now filters inactive positions, and the program skips them in the fill loop.
+`option_pool.total_available` is now treated as writer-backed unsold inventory. `close_long_to_pool` no longer inflates the aggregate counter by re-adding buyer-closed LONGs, which removes the false-liquidity drift behind `InsufficientWriterPositionLiquidity`.
 
 **Recommended client flow:**
   1. Run `preflightBuyFromPoolMarketOrder` for UX gating (checks both pool and active writer liquidity).
@@ -365,7 +381,7 @@ The program uses the **Switchboard pull feed account** you pass in (or that the 
 - **Buy:** Premium computation (Black-Scholes).
 - **Close:** Payout computation (mark-to-market). If the price is stale, the close payout will not reflect the current option value; the buyer may receive back only their premium instead of profit.
 
-**You must ensure the Switchboard feed is recently updated** when building buy and close transactions. The SDK does not post oracle updates by default; use the Switchboard helper exports and your update pipeline before trading instructions.
+The SDK now prepends Switchboard crank instructions by default for mint, buy, close, unwind, exercise/settle/liquidate, and OMLP deposit/withdraw builders. Keep feeds configured correctly, but frontends no longer need a separate crank transaction in the standard path.
 
 - **Mainnet:** keep feed updates fresh enough to satisfy the feed's configured `max_staleness`.
 - **Devnet:** ensure your keeper/update pipeline runs before user trade flows; payouts reflect the feed's staleness config.

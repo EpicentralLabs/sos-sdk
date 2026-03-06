@@ -4,9 +4,13 @@ import {
 } from "../generated/instructions";
 import type { Instruction } from "@solana/kit";
 import { toAddress } from "../client/program";
-import type { AddressLike, BuiltTransaction } from "../client/types";
+import type { AddressLike, BuiltTransaction, KitRpc } from "../client/types";
 import { assertPositiveAmount } from "../shared/amounts";
 import { getCloseAccountInstruction, NATIVE_MINT } from "../wsol/instructions";
+import {
+  buildSwitchboardCrank,
+  prependSwitchboardCrank,
+} from "../oracle/switchboard";
 
 export interface BuildDepositToPositionParams {
   vault: AddressLike;
@@ -15,6 +19,12 @@ export interface BuildDepositToPositionParams {
   lender: AddressLike;
   amount: bigint | number;
   position?: AddressLike;
+  rpc?: KitRpc;
+  switchboardFeed?: AddressLike;
+  marketData?: AddressLike;
+  disableSwitchboardCrank?: boolean;
+  switchboardCrossbarUrl?: string;
+  switchboardNumSignatures?: number;
 }
 
 export interface BuildWithdrawFromPositionParams {
@@ -26,6 +36,12 @@ export interface BuildWithdrawFromPositionParams {
   position?: AddressLike;
   unwrapSol?: boolean;
   vaultMint?: AddressLike;
+  rpc?: KitRpc;
+  switchboardFeed?: AddressLike;
+  marketData?: AddressLike;
+  disableSwitchboardCrank?: boolean;
+  switchboardCrossbarUrl?: string;
+  switchboardNumSignatures?: number;
 }
 
 export async function buildDepositToPositionInstruction(
@@ -49,7 +65,24 @@ export async function buildDepositToPositionTransaction(
   params: BuildDepositToPositionParams
 ): Promise<BuiltTransaction> {
   const instruction = await buildDepositToPositionInstruction(params);
-  return { instructions: [instruction] };
+  const actionTx = { instructions: [instruction] };
+  if (
+    params.disableSwitchboardCrank ||
+    !params.rpc ||
+    (!params.switchboardFeed && !params.marketData)
+  ) {
+    return actionTx;
+  }
+
+  const crank = await buildSwitchboardCrank({
+    rpc: params.rpc,
+    payer: params.lender,
+    switchboardFeed: params.switchboardFeed,
+    marketData: params.marketData,
+    crossbarUrl: params.switchboardCrossbarUrl,
+    numSignatures: params.switchboardNumSignatures,
+  });
+  return prependSwitchboardCrank(crank, actionTx);
 }
 
 export async function buildWithdrawFromPositionInstruction(
@@ -90,5 +123,22 @@ export async function buildWithdrawFromPositionTransaction(
     );
   }
 
-  return { instructions };
+  const actionTx = { instructions };
+  if (
+    params.disableSwitchboardCrank ||
+    !params.rpc ||
+    (!params.switchboardFeed && !params.marketData)
+  ) {
+    return actionTx;
+  }
+
+  const crank = await buildSwitchboardCrank({
+    rpc: params.rpc,
+    payer: params.lender,
+    switchboardFeed: params.switchboardFeed,
+    marketData: params.marketData,
+    crossbarUrl: params.switchboardCrossbarUrl,
+    numSignatures: params.switchboardNumSignatures,
+  });
+  return prependSwitchboardCrank(crank, actionTx);
 }

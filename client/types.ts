@@ -5,4 +5,5 @@ export type KitRpc = Rpc<SolanaRpcApi>;
 
 export interface BuiltTransaction {
   instructions: Instruction<string>[];
+  addressLookupTableAddresses?: AddressLike[];
 }

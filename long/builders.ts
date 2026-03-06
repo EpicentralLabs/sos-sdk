@@ -24,7 +24,13 @@ import {
 } from "../wsol/instructions";
 import { fetchMarketDataAccount, fetchOptionPool } from "../accounts/fetchers";
 import { getBuyFromPoolRemainingAccounts } from "./remaining-accounts";
+import { applySlippageBps } from "./quotes";
+import {
+  buildSwitchboardCrank,
+  prependSwitchboardCrank,
+} from "../oracle/switchboard";
 import { fetchWriterPositionsForPool } from "../accounts/list";
+import { getGlobalTradeConfig } from "../shared/trade-config";
 import bs58 from "bs58";
 
 export interface BuildBuyFromPoolParams {
@@ -143,6 +149,9 @@ export interface BuildBuyFromPoolTransactionWithDerivationParams {
   buyerPosition?: AddressLike;
   buyerOptionAccount?: AddressLike;
   remainingAccounts?: RemainingAccountInput[];
+  disableSwitchboardCrank?: boolean;
+  switchboardCrossbarUrl?: string;
+  switchboardNumSignatures?: number;
 }
 
 const DEFAULT_MARKET_ORDER_SLIPPAGE_BUFFER_BASE_UNITS = 500_000n;
@@ -224,7 +233,7 @@ export async function buildBuyFromPoolTransactionWithDerivation(
       Array.from(marketDataAccount.switchboardFeedId as unknown as Uint8Array)
     );
 
-  return buildBuyFromPoolTransaction({
+  const actionTx = await buildBuyFromPoolTransaction({
     optionPool: resolved.optionPool,
     optionAccount: resolved.optionAccount,
     longMint: resolved.longMint,
@@ -241,6 +250,20 @@ export async function buildBuyFromPoolTransactionWithDerivation(
     buyerOptionAccount,
     remainingAccounts: params.remainingAccounts,
   });
+
+  if (params.disableSwitchboardCrank) {
+    return actionTx;
+  }
+
+  const crank = await buildSwitchboardCrank({
+    rpc: params.rpc,
+    payer: params.buyer,
+    switchboardFeed,
+    marketData: resolved.marketData,
+    crossbarUrl: params.switchboardCrossbarUrl,
+    numSignatures: params.switchboardNumSignatures,
+  });
+  return prependSwitchboardCrank(crank, actionTx);
 }
 
 export interface BuildBuyFromPoolMarketOrderParams
@@ -311,10 +334,16 @@ export async function buildBuyFromPoolMarketOrderTransactionWithDerivation(
     `This may indicate data staleness - please refresh and retry.`
   );
 
-  const slippageBuffer = normalizeMarketOrderSlippageBuffer(
-    params,
-    refetchedPool.underlyingMint
-  );
+  const globalTradeConfig = getGlobalTradeConfig();
+  const hasExplicitSlippageBuffer =
+    params.slippageBufferBaseUnits !== undefined ||
+    params.slippageBufferLamports !== undefined;
+  const slippageBuffer = hasExplicitSlippageBuffer
+    ? normalizeMarketOrderSlippageBuffer(params, refetchedPool.underlyingMint)
+    : globalTradeConfig.slippageBps !== undefined
+      ? applySlippageBps(params.quotedPremiumTotal, globalTradeConfig.slippageBps) -
+        BigInt(params.quotedPremiumTotal)
+      : normalizeMarketOrderSlippageBuffer(params, refetchedPool.underlyingMint);
   const maxPremiumAmount = BigInt(params.quotedPremiumTotal) + slippageBuffer;
   assertPositiveAmount(maxPremiumAmount, "maxPremiumAmount");
 
@@ -329,7 +358,7 @@ export async function buildBuyFromPoolMarketOrderTransactionWithDerivation(
       Array.from(marketDataAccount.switchboardFeedId as unknown as Uint8Array)
     );
 
-  return buildBuyFromPoolTransaction({
+  const actionTx = await buildBuyFromPoolTransaction({
     optionPool: resolved.optionPool,
     optionAccount: resolved.optionAccount,
     longMint: resolved.longMint,
@@ -346,6 +375,20 @@ export async function buildBuyFromPoolMarketOrderTransactionWithDerivation(
     buyerOptionAccount,
     remainingAccounts,
   });
+
+  if (params.disableSwitchboardCrank) {
+    return actionTx;
+  }
+
+  const crank = await buildSwitchboardCrank({
+    rpc: params.rpc,
+    payer: params.buyer,
+    switchboardFeed,
+    marketData: resolved.marketData,
+    crossbarUrl: params.switchboardCrossbarUrl,
+    numSignatures: params.switchboardNumSignatures,
+  });
+  return prependSwitchboardCrank(crank, actionTx);
 }
 
 export async function buildCloseLongToPoolInstruction(
@@ -438,6 +481,9 @@ export interface BuildCloseLongToPoolTransactionWithDerivationParams {
    */
   unwrapPayoutSol?: boolean;
   remainingAccounts?: RemainingAccountInput[];
+  disableSwitchboardCrank?: boolean;
+  switchboardCrossbarUrl?: string;
+  switchboardNumSignatures?: number;
 }
 
 export async function buildCloseLongToPoolTransactionWithDerivation(
@@ -485,7 +531,7 @@ export async function buildCloseLongToPoolTransactionWithDerivation(
       Array.from(marketDataAccount.switchboardFeedId as unknown as Uint8Array)
     );
 
-  return buildCloseLongToPoolTransaction({
+  const actionTx = await buildCloseLongToPoolTransaction({
     optionPool: resolved.optionPool,
     optionAccount: resolved.optionAccount,
     collateralPool: resolved.collateralPool,
@@ -507,4 +553,18 @@ export async function buildCloseLongToPoolTransactionWithDerivation(
     unwrapPayoutSol,
     remainingAccounts: params.remainingAccounts,
   });
+
+  if (params.disableSwitchboardCrank) {
+    return actionTx;
+  }
+
+  const crank = await buildSwitchboardCrank({
+    rpc: params.rpc,
+    payer: params.buyer,
+    switchboardFeed,
+    marketData: resolved.marketData,
+    crossbarUrl: params.switchboardCrossbarUrl,
+    numSignatures: params.switchboardNumSignatures,
+  });
+  return prependSwitchboardCrank(crank, actionTx);
 }

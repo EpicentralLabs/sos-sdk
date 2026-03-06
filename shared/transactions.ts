@@ -25,6 +25,7 @@ import {
   getLookupTableAddressForNetwork,
   type LookupTableNetwork,
 } from "../client/lookup-table";
+import { getGlobalTradeConfig } from "./trade-config";
 
 export interface SendBuiltTransactionParams extends BuiltTransaction {
   rpc: KitRpc;
@@ -56,18 +57,24 @@ export async function sendBuiltTransaction(
   params: SendBuiltTransactionParams
 ): Promise<string> {
   const commitment = params.commitment ?? "confirmed";
+  const globalTradeConfig = getGlobalTradeConfig();
   const { value: latestBlockhash } = await params.rpc.getLatestBlockhash().send();
 
   const computeBudgetInstructions: Instruction<string>[] = [];
-  if (params.computeUnitLimit !== undefined) {
+  const computeUnitLimit =
+    params.computeUnitLimit ?? globalTradeConfig.computeUnitLimit;
+  if (computeUnitLimit !== undefined) {
     computeBudgetInstructions.push(
-      getSetComputeUnitLimitInstruction({ units: params.computeUnitLimit })
+      getSetComputeUnitLimitInstruction({ units: computeUnitLimit })
     );
   }
-  if (params.computeUnitPriceMicroLamports !== undefined) {
+  const computeUnitPriceMicroLamports =
+    params.computeUnitPriceMicroLamports ??
+    globalTradeConfig.computeUnitPriceMicroLamports;
+  if (computeUnitPriceMicroLamports !== undefined) {
     computeBudgetInstructions.push(
       getSetComputeUnitPriceInstruction({
-        microLamports: params.computeUnitPriceMicroLamports,
+        microLamports: computeUnitPriceMicroLamports,
       })
     );
   }

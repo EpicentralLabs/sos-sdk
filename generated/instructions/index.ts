@@ -23,6 +23,7 @@ export * from "./initializeMarketData";
 export * from "./initOptionPool";
 export * from "./liquidateWriterPosition";
 export * from "./omlpCreateVault";
+export * from "./omlpUpdateMaxBorrowCap";
 export * from "./omlpUpdateMaxLeverage";
 export * from "./omlpUpdateProtocolFee";
 export * from "./omlpUpdateSupplyLimit";

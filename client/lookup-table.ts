@@ -4,7 +4,7 @@ import { PROGRAM_ID } from "./program";
 import type { KitRpc } from "./types";
 
 export const LOOKUP_TABLE_ADDRESSES: Record<"devnet" | "mainnet", Address | null> = {
-  devnet: address("FTLPczoQpTmND126pMiJpnPudsDxfGuCNUQAPk4SUcJd"),
+  devnet: address("CxJn2cyXF8wRr4Cg7GKhSbGS7VW8wAnz3C4uQq537kXr"),
   mainnet: null,
 };
 
