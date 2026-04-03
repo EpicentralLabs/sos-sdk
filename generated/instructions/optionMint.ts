@@ -93,7 +93,6 @@ export type OptionMintInstruction<
   TAccountEscrowAuthority extends string | AccountMeta<string> = string,
   TAccountEscrowTokenAccount extends string | AccountMeta<string> = string,
   TAccountPoolLoan extends string | AccountMeta<string> = string,
-  TAccountSwitchboardFeed extends string | AccountMeta<string> = string,
   TAccountMaker extends string | AccountMeta<string> = string,
   TAccountTokenProgram extends string | AccountMeta<string> =
     "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
@@ -182,9 +181,6 @@ export type OptionMintInstruction<
       TAccountPoolLoan extends string
         ? WritableAccount<TAccountPoolLoan>
         : TAccountPoolLoan,
-      TAccountSwitchboardFeed extends string
-        ? ReadonlyAccount<TAccountSwitchboardFeed>
-        : TAccountSwitchboardFeed,
       TAccountMaker extends string
         ? WritableSignerAccount<TAccountMaker> &
             AccountSignerMeta<TAccountMaker>
@@ -311,7 +307,6 @@ export type OptionMintAsyncInput<
   TAccountEscrowAuthority extends string = string,
   TAccountEscrowTokenAccount extends string = string,
   TAccountPoolLoan extends string = string,
-  TAccountSwitchboardFeed extends string = string,
   TAccountMaker extends string = string,
   TAccountTokenProgram extends string = string,
   TAccountAssociatedTokenProgram extends string = string,
@@ -377,7 +372,6 @@ export type OptionMintAsyncInput<
   escrowTokenAccount?: Address<TAccountEscrowTokenAccount>;
   /** Pool loan account (optional - only required if borrowing) */
   poolLoan?: Address<TAccountPoolLoan>;
-  switchboardFeed: Address<TAccountSwitchboardFeed>;
   maker: TransactionSigner<TAccountMaker>;
   tokenProgram?: Address<TAccountTokenProgram>;
   associatedTokenProgram?: Address<TAccountAssociatedTokenProgram>;
@@ -421,7 +415,6 @@ export async function getOptionMintInstructionAsync<
   TAccountEscrowAuthority extends string,
   TAccountEscrowTokenAccount extends string,
   TAccountPoolLoan extends string,
-  TAccountSwitchboardFeed extends string,
   TAccountMaker extends string,
   TAccountTokenProgram extends string,
   TAccountAssociatedTokenProgram extends string,
@@ -455,7 +448,6 @@ export async function getOptionMintInstructionAsync<
     TAccountEscrowAuthority,
     TAccountEscrowTokenAccount,
     TAccountPoolLoan,
-    TAccountSwitchboardFeed,
     TAccountMaker,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
@@ -491,7 +483,6 @@ export async function getOptionMintInstructionAsync<
     TAccountEscrowAuthority,
     TAccountEscrowTokenAccount,
     TAccountPoolLoan,
-    TAccountSwitchboardFeed,
     TAccountMaker,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
@@ -557,10 +548,6 @@ export async function getOptionMintInstructionAsync<
       isWritable: true,
     },
     poolLoan: { value: input.poolLoan ?? null, isWritable: true },
-    switchboardFeed: {
-      value: input.switchboardFeed ?? null,
-      isWritable: false,
-    },
     maker: { value: input.maker ?? null, isWritable: true },
     tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
     associatedTokenProgram: {
@@ -823,7 +810,6 @@ export async function getOptionMintInstructionAsync<
       getAccountMeta(accounts.escrowAuthority),
       getAccountMeta(accounts.escrowTokenAccount),
       getAccountMeta(accounts.poolLoan),
-      getAccountMeta(accounts.switchboardFeed),
       getAccountMeta(accounts.maker),
       getAccountMeta(accounts.tokenProgram),
       getAccountMeta(accounts.associatedTokenProgram),
@@ -861,7 +847,6 @@ export async function getOptionMintInstructionAsync<
     TAccountEscrowAuthority,
     TAccountEscrowTokenAccount,
     TAccountPoolLoan,
-    TAccountSwitchboardFeed,
     TAccountMaker,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
@@ -896,7 +881,6 @@ export type OptionMintInput<
   TAccountEscrowAuthority extends string = string,
   TAccountEscrowTokenAccount extends string = string,
   TAccountPoolLoan extends string = string,
-  TAccountSwitchboardFeed extends string = string,
   TAccountMaker extends string = string,
   TAccountTokenProgram extends string = string,
   TAccountAssociatedTokenProgram extends string = string,
@@ -962,7 +946,6 @@ export type OptionMintInput<
   escrowTokenAccount?: Address<TAccountEscrowTokenAccount>;
   /** Pool loan account (optional - only required if borrowing) */
   poolLoan?: Address<TAccountPoolLoan>;
-  switchboardFeed: Address<TAccountSwitchboardFeed>;
   maker: TransactionSigner<TAccountMaker>;
   tokenProgram?: Address<TAccountTokenProgram>;
   associatedTokenProgram?: Address<TAccountAssociatedTokenProgram>;
@@ -1006,7 +989,6 @@ export function getOptionMintInstruction<
   TAccountEscrowAuthority extends string,
   TAccountEscrowTokenAccount extends string,
   TAccountPoolLoan extends string,
-  TAccountSwitchboardFeed extends string,
   TAccountMaker extends string,
   TAccountTokenProgram extends string,
   TAccountAssociatedTokenProgram extends string,
@@ -1040,7 +1022,6 @@ export function getOptionMintInstruction<
     TAccountEscrowAuthority,
     TAccountEscrowTokenAccount,
     TAccountPoolLoan,
-    TAccountSwitchboardFeed,
     TAccountMaker,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
@@ -1075,7 +1056,6 @@ export function getOptionMintInstruction<
   TAccountEscrowAuthority,
   TAccountEscrowTokenAccount,
   TAccountPoolLoan,
-  TAccountSwitchboardFeed,
   TAccountMaker,
   TAccountTokenProgram,
   TAccountAssociatedTokenProgram,
@@ -1140,10 +1120,6 @@ export function getOptionMintInstruction<
       isWritable: true,
     },
     poolLoan: { value: input.poolLoan ?? null, isWritable: true },
-    switchboardFeed: {
-      value: input.switchboardFeed ?? null,
-      isWritable: false,
-    },
     maker: { value: input.maker ?? null, isWritable: true },
     tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
     associatedTokenProgram: {
@@ -1214,7 +1190,6 @@ export function getOptionMintInstruction<
       getAccountMeta(accounts.escrowAuthority),
       getAccountMeta(accounts.escrowTokenAccount),
       getAccountMeta(accounts.poolLoan),
-      getAccountMeta(accounts.switchboardFeed),
       getAccountMeta(accounts.maker),
       getAccountMeta(accounts.tokenProgram),
       getAccountMeta(accounts.associatedTokenProgram),
@@ -1252,7 +1227,6 @@ export function getOptionMintInstruction<
     TAccountEscrowAuthority,
     TAccountEscrowTokenAccount,
     TAccountPoolLoan,
-    TAccountSwitchboardFeed,
     TAccountMaker,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
@@ -1326,13 +1300,12 @@ export type ParsedOptionMintInstruction<
     escrowTokenAccount?: TAccountMetas[22] | undefined;
     /** Pool loan account (optional - only required if borrowing) */
     poolLoan?: TAccountMetas[23] | undefined;
-    switchboardFeed: TAccountMetas[24];
-    maker: TAccountMetas[25];
-    tokenProgram: TAccountMetas[26];
-    associatedTokenProgram: TAccountMetas[27];
-    tokenMetadataProgram: TAccountMetas[28];
-    systemProgram: TAccountMetas[29];
-    rent: TAccountMetas[30];
+    maker: TAccountMetas[24];
+    tokenProgram: TAccountMetas[25];
+    associatedTokenProgram: TAccountMetas[26];
+    tokenMetadataProgram: TAccountMetas[27];
+    systemProgram: TAccountMetas[28];
+    rent: TAccountMetas[29];
   };
   data: OptionMintInstructionData;
 };
@@ -1345,7 +1318,7 @@ export function parseOptionMintInstruction<
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedOptionMintInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 31) {
+  if (instruction.accounts.length < 30) {
     // TODO: Coded error.
     throw new Error("Not enough accounts");
   }
@@ -1388,7 +1361,6 @@ export function parseOptionMintInstruction<
       escrowAuthority: getNextOptionalAccount(),
       escrowTokenAccount: getNextOptionalAccount(),
       poolLoan: getNextOptionalAccount(),
-      switchboardFeed: getNextAccount(),
       maker: getNextAccount(),
       tokenProgram: getNextAccount(),
       associatedTokenProgram: getNextAccount(),

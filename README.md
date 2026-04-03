@@ -136,11 +136,13 @@ Or pass `addressLookupTableAddresses: [getLookupTableAddressForNetwork("devnet")
 | Function | Description |
 |----------|-------------|
 | `resolveSwitchboardFeedFromMarketData` | Resolves Switchboard feed address from market data account. |
+| `resolveSwitchboardFeedIdFromMarketData` | Resolves Switchboard feed ID (hex) from market data account. |
+| `buildSwitchboardQuoteInstruction` | Builds a direct quote instruction (ed25519 verify ix) for quote-path transactions. |
 | `buildSwitchboardPullFeedUpdate` | Low-level helper that fetches Switchboard pull-feed update instructions. |
 | `buildSwitchboardCrank` | Returns Kit-native crank instructions plus lookup tables for the configured feed. |
 | `prependSwitchboardCrank` | Prepends crank instructions/ALTs to a built SDK transaction. |
 
-Price-sensitive option builders and OMLP deposit/withdraw builders now prepend Switchboard crank instructions by default, so frontends can keep using the same Kit transaction pipeline without managing a separate oracle update step.
+Price-sensitive option builders and OMLP deposit/withdraw builders prepend Switchboard crank instructions by default. For `option_mint` (short-open), the SDK now uses direct quote verification and prepends the quote instruction at index `0`.
 
 See [Frontend Switchboard Integration](../../docs/FRONTEND_SWITCHBOARD_INTEGRATION.md) for full setup and usage.
 
@@ -363,7 +365,8 @@ Check these first:
 
 - `buyer_position` account shape/size (`146` bytes expected).
 - `market_data` account shape/size (`128` bytes expected).
-- `switchboardFeed` points to the configured Switchboard pull feed account for the market (or omit it and let derivation builders resolve from `market_data.switchboard_feed_id`).
+- For managed-feed paths, `switchboardFeed` must point to the configured pull feed account.
+- For quote-path `option_mint`, ensure `market_data.switchboard_feed_id` stores the 32-byte feed ID hash and pass `rpcEndpoint` so the SDK can fetch the quote right before submit.
 - Account list/order matches the generated instruction layout.
 
 This is different from liquidity failures (`6042/6043`) and should be debugged as an account wiring/layout issue.
@@ -371,7 +374,8 @@ This is different from liquidity failures (`6042/6043`) and should be debugged a
 ### Oracle inputs (asset-agnostic)
 
 - Keep oracle handling universal across assets.
-- Use the market-configured `switchboard_feed_id` as source-of-truth and pass `switchboardFeed` when using low-level builders.
+- Use the market-configured `switchboard_feed_id` as source-of-truth.
+- Managed flows resolve a feed account from that ID; quote-path short-open uses the feed ID directly in quote verification.
 - Avoid hardcoding a single feed/account address in shared SDK integration flows.
 
 ### Price update freshness (required for accurate payouts)
@@ -381,7 +385,7 @@ The program uses the **Switchboard pull feed account** you pass in (or that the 
 - **Buy:** Premium computation (Black-Scholes).
 - **Close:** Payout computation (mark-to-market). If the price is stale, the close payout will not reflect the current option value; the buyer may receive back only their premium instead of profit.
 
-The SDK now prepends Switchboard crank instructions by default for mint, buy, close, unwind, exercise/settle/liquidate, and OMLP deposit/withdraw builders. Keep feeds configured correctly, but frontends no longer need a separate crank transaction in the standard path.
+The SDK prepends Switchboard crank instructions for managed paths and prepends a direct quote instruction for short-open `option_mint`.
 
 - **Mainnet:** keep feed updates fresh enough to satisfy the feed's configured `max_staleness`.
 - **Devnet:** ensure your keeper/update pipeline runs before user trade flows; payouts reflect the feed's staleness config.

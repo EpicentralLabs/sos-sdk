@@ -33,13 +33,22 @@ export * from "./omlp/service";
 export * from "./shared/trade-config";
 export {
   resolveSwitchboardFeedFromMarketData,
+  resolveSwitchboardFeedIdFromMarketData,
+  buildSwitchboardQuoteInstruction,
   buildSwitchboardPullFeedUpdate,
   buildSwitchboardCrank,
   inferSwitchboardNetwork,
   prependSwitchboardCrank,
+  feedIdBytesToHex,
+  SWITCHBOARD_DEFAULT_DEVNET_QUEUE,
+  SWITCHBOARD_DEFAULT_MAINNET_QUEUE,
+  SLOT_HASHES_SYSVAR_ADDRESS,
+  INSTRUCTIONS_SYSVAR_ADDRESS,
   type SwitchboardPullFeedLike,
   type BuildSwitchboardPullFeedUpdateParams,
   type BuildSwitchboardCrankParams,
+  type BuildSwitchboardQuoteInstructionParams,
+  type SwitchboardQuoteInstructionResult,
   type SwitchboardCrankResult,
   type SwitchboardNetwork,
 } from "./oracle/switchboard";

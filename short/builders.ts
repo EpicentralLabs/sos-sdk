@@ -32,12 +32,14 @@ import {
 } from "../wsol/instructions";
 import { preflightUnwindWriterUnsold } from "./preflight";
 import {
-  buildSwitchboardCrank,
-  prependSwitchboardCrank,
+  buildSwitchboardQuoteInstruction,
+  feedIdBytesToHex,
+  INSTRUCTIONS_SYSVAR_ADDRESS,
+  SLOT_HASHES_SYSVAR_ADDRESS,
+  SWITCHBOARD_DEFAULT_DEVNET_QUEUE,
 } from "../oracle/switchboard";
 import { applySlippageBps } from "../long/quotes";
 import { getGlobalTradeConfig } from "../shared/trade-config";
-import bs58 from "bs58";
 
 export interface BuildOptionMintParams {
   optionType: OptionType;
@@ -58,8 +60,8 @@ export interface BuildOptionMintParams {
   maker: AddressLike;
   makerCollateralAccount: AddressLike;
   underlyingMint: AddressLike;
-  /** Switchboard pull feed account for collateral calculation. */
-  switchboardFeed: AddressLike;
+  /** Queue account required by direct Switchboard quote verification. */
+  switchboardQueue?: AddressLike;
   longMetadataAccount?: AddressLike;
   shortMetadataAccount?: AddressLike;
   optionAccount?: AddressLike;
@@ -215,7 +217,6 @@ export async function buildOptionMintInstruction(
       ? toAddress(params.escrowTokenAccount)
       : undefined,
     poolLoan: params.poolLoan ? toAddress(params.poolLoan) : undefined,
-    switchboardFeed: toAddress(params.switchboardFeed),
     maker: toAddress(params.maker) as any,
     optionType: params.optionType,
     strikePrice: params.strikePrice,
@@ -229,7 +230,25 @@ export async function buildOptionMintInstruction(
     maxRequiredCollateralAmount,
   });
 
-  return appendRemainingAccounts(kitInstruction, params.remainingAccounts);
+  const quoteVerificationAccounts: RemainingAccountInput[] = [
+    {
+      address: params.switchboardQueue ?? SWITCHBOARD_DEFAULT_DEVNET_QUEUE,
+      isWritable: false,
+    },
+    {
+      address: SLOT_HASHES_SYSVAR_ADDRESS,
+      isWritable: false,
+    },
+    {
+      address: INSTRUCTIONS_SYSVAR_ADDRESS,
+      isWritable: false,
+    },
+  ];
+
+  return appendRemainingAccounts(kitInstruction, [
+    ...quoteVerificationAccounts,
+    ...(params.remainingAccounts ?? []),
+  ]);
 }
 
 export async function buildOptionMintTransaction(
@@ -276,9 +295,8 @@ export interface BuildOptionMintTransactionWithDerivationParams {
    * (or underlyingMint if collateralMint is not provided).
    */
   makerCollateralAccount?: AddressLike;
-  /** Optional explicit Switchboard feed account override. */
-  switchboardFeed?: AddressLike;
   rpc: KitRpc;
+  rpcEndpoint?: string;
   programId?: AddressLike;
   vault?: AddressLike;
   vaultTokenAccount?: AddressLike;
@@ -337,11 +355,9 @@ export async function buildOptionMintTransactionWithDerivation(
     !!marketDataAccount,
     "Market data account not found for resolved option market."
   );
-  const switchboardFeed =
-    params.switchboardFeed ??
-    bs58.encode(
-      Array.from(marketDataAccount.switchboardFeedId as unknown as Uint8Array)
-    );
+  const switchboardFeedId = feedIdBytesToHex(
+    Uint8Array.from(marketDataAccount.switchboardFeedId as unknown as Uint8Array)
+  );
 
   const tx = await buildOptionMintTransaction({
     ...params,
@@ -361,13 +377,13 @@ export async function buildOptionMintTransactionWithDerivation(
     premiumVault: resolved.premiumVault,
     collateralPool: resolved.collateralPool,
     collateralVault: resolved.collateralVault,
-    switchboardFeed,
     vault: params.vault,
     vaultTokenAccount: params.vaultTokenAccount,
     escrowState: params.escrowState,
     escrowAuthority: params.escrowAuthority,
     escrowTokenAccount: params.escrowTokenAccount,
     poolLoan: params.poolLoan,
+    switchboardQueue: SWITCHBOARD_DEFAULT_DEVNET_QUEUE,
     remainingAccounts: params.remainingAccounts,
   });
 
@@ -387,15 +403,22 @@ export async function buildOptionMintTransactionWithDerivation(
     return actionTx;
   }
 
-  const crank = await buildSwitchboardCrank({
-    rpc: params.rpc,
-    payer: params.maker,
-    switchboardFeed,
-    marketData: resolved.marketData,
+  invariant(
+    !!params.rpcEndpoint,
+    "rpcEndpoint is required to fetch Switchboard quote instructions."
+  );
+  const quote = await buildSwitchboardQuoteInstruction({
+    rpcEndpoint: params.rpcEndpoint,
+    feedIdHex: switchboardFeedId,
+    network: "devnet",
     crossbarUrl: params.switchboardCrossbarUrl,
     numSignatures: params.switchboardNumSignatures,
+    instructionIdx: 0,
   });
-  return prependSwitchboardCrank(crank, actionTx);
+
+  return {
+    instructions: [quote.instruction, ...actionTx.instructions],
+  };
 }
 
 export async function buildUnwindWriterUnsoldInstruction(
